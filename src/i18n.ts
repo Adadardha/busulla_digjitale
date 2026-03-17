@@ -151,7 +151,7 @@ export const TRANSLATIONS = {
   },
   about: {
     title: "Rreth Projektit",
-    subtitle: "Busulla e Karrierës — Orientimi digjital i karrierës",
+    subtitle: "Busulla e Karrierës -- Orientimi digjital i karrierës",
     methodology: "Metodologjia",
     methodologyText: "Busulla përdor Teorinë e Karrierës së Holland-it, e adaptuar për kontekstin shqiptar. Kuizi me 10 pyetje mat dimensionet e personalitetit dhe interesave, duke i lidhur me profile karrierash reale në tregun shqiptar.",
     problem: "Problemi",
@@ -285,19 +285,19 @@ export const QUICK_ACTIONS: QuickAction[] = [
   {
     id: 'career-match',
     label: 'Karrierë e përshtatshme',
-    icon: '🎯',
+    icon: 'career',
     prompt: 'Çfarë karriere më përshtatet?',
   },
   {
     id: 'university-prep',
     label: 'Përgatitje për universitet',
-    icon: '🎓',
+    icon: 'university',
     prompt: 'Si të përgatitem për universitet?',
   },
   {
     id: 'job-market',
     label: 'Tregu i punës',
-    icon: '📊',
+    icon: 'market',
     prompt: 'Cilat janë punët më të kërkuara në Shqipëri?',
   },
 ];
@@ -306,22 +306,22 @@ export const INTERVIEW_MODE_INFO = {
   [InterviewMode.TECHNICAL]: {
     name: TRANSLATIONS.interviewSetup.modes.technical.name,
     description: TRANSLATIONS.interviewSetup.modes.technical.description,
-    icon: '⚙️',
+    icon: 'technical',
   },
   [InterviewMode.BEHAVIORAL]: {
     name: TRANSLATIONS.interviewSetup.modes.behavioral.name,
     description: TRANSLATIONS.interviewSetup.modes.behavioral.description,
-    icon: '🤝',
+    icon: 'behavioral',
   },
   [InterviewMode.MIXED]: {
     name: TRANSLATIONS.interviewSetup.modes.mixed.name,
     description: TRANSLATIONS.interviewSetup.modes.mixed.description,
-    icon: '🔀',
+    icon: 'mixed',
   },
   [InterviewMode.STRESS]: {
     name: TRANSLATIONS.interviewSetup.modes.stress.name,
     description: TRANSLATIONS.interviewSetup.modes.stress.description,
-    icon: '🔥',
+    icon: 'stress',
   },
 };
 

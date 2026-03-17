@@ -1,7 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Settings, Users, Shuffle, Zap } from 'lucide-react';
 import { InterviewMode, DifficultyLevel, PredictionResult } from '../../types';
 import { TRANSLATIONS, INTERVIEW_MODE_INFO, DIFFICULTY_INFO } from '../../i18n';
+
+const MODE_ICONS: Record<string, React.ReactNode> = {
+  technical: <Settings className="w-5 h-5" />,
+  behavioral: <Users className="w-5 h-5" />,
+  mixed: <Shuffle className="w-5 h-5" />,
+  stress: <Zap className="w-5 h-5" />,
+};
 
 interface InterviewSetupProps {
   prediction: PredictionResult;
@@ -67,7 +75,7 @@ const InterviewSetup: React.FC<InterviewSetupProps> = ({
                   whileTap={{ scale: 0.98 }}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">{info.icon}</span>
+                    <span className="mt-0.5 text-muted-foreground">{MODE_ICONS[info.icon] || <Settings className="w-5 h-5" />}</span>
                     <div>
                       <p className="font-bold text-base md:text-lg">{info.name}</p>
                       <p className="text-xs md:text-sm text-muted-foreground mt-1">{info.description}</p>
@@ -75,7 +83,7 @@ const InterviewSetup: React.FC<InterviewSetupProps> = ({
                   </div>
                   {isSelected && (
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mt-3 text-xs font-bold uppercase">
-                      ✓ E ZGJEDHUR
+                      E ZGJEDHUR
                     </motion.div>
                   )}
                 </motion.button>
@@ -106,7 +114,7 @@ const InterviewSetup: React.FC<InterviewSetupProps> = ({
                   <p className="text-xs md:text-sm text-muted-foreground mt-1">{info.description}</p>
                   {isSelected && (
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mt-3 text-xs font-bold uppercase">
-                      ✓
+                      E ZGJEDHUR
                     </motion.div>
                   )}
                 </motion.button>

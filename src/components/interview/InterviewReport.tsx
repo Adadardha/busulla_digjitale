@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Check, Lightbulb } from 'lucide-react';
 import { InterviewReport as InterviewReportType } from '../../types';
 import { TRANSLATIONS, INTERVIEW_MODE_INFO } from '../../i18n';
 
@@ -73,7 +74,6 @@ Data: ${new Date().toLocaleDateString('sq-AL')}
     URL.revokeObjectURL(url);
   };
 
-  // Determine weak answers for detailed feedback on fail
   const weakAnswers = report.answersReview.filter(a => a.score < 50);
   const isHired = report.verdict === 'hired';
 
@@ -127,7 +127,7 @@ Data: ${new Date().toLocaleDateString('sq-AL')}
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Mënyra</p>
               <p className="text-xl">
-                {INTERVIEW_MODE_INFO[report.mode]?.icon} {INTERVIEW_MODE_INFO[report.mode]?.name || report.mode}
+                {INTERVIEW_MODE_INFO[report.mode]?.name || report.mode}
               </p>
             </div>
           </div>
@@ -136,7 +136,7 @@ Data: ${new Date().toLocaleDateString('sq-AL')}
         {/* Congratulations or Weak Answers */}
         {isHired ? (
           <div className="mb-8 p-6 brutalist-border bg-success/10">
-            <h3 className="text-xl font-bold mb-3">🎉 Urime! Performanca juaj ishte e shkëlqyer!</h3>
+            <h3 className="text-xl font-bold mb-3">Urime! Performanca juaj ishte e shkëlqyer!</h3>
             <p className="text-muted-foreground mb-4">{report.summary}</p>
             <h4 className="text-sm font-bold uppercase mb-3">{TRANSLATIONS.interviewReport.nextSteps}:</h4>
             <ol className="space-y-2">
@@ -169,8 +169,8 @@ Data: ${new Date().toLocaleDateString('sq-AL')}
                         Përgjigjja juaj: {answer.answer.substring(0, 100)}{answer.answer.length > 100 ? '...' : ''}
                       </p>
                       <div className="pt-2 border-t border-border">
-                        <p className="text-xs font-bold uppercase text-warning mb-1">
-                          💡 {TRANSLATIONS.interviewReport.tipForImprovement}:
+                        <p className="text-xs font-bold uppercase text-warning mb-1 flex items-center gap-1.5">
+                          <Lightbulb className="w-3 h-3" /> {TRANSLATIONS.interviewReport.tipForImprovement}:
                         </p>
                         <p className="text-xs">{answer.feedback}</p>
                       </div>
@@ -212,7 +212,7 @@ Data: ${new Date().toLocaleDateString('sq-AL')}
             <ul className="space-y-2">
               {report.recommendations.map((rec, i) => (
                 <li key={i} className="flex items-start gap-2">
-                  <span className="text-success">✓</span>
+                  <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
                   <span className="text-sm">{rec}</span>
                 </li>
               ))}

@@ -13,19 +13,13 @@ import {
 } from '../types';
 import { classifyToPrediction } from './classifier';
 
-// ─────────────────────────────────────────────
 // Config
-// ─────────────────────────────────────────────
-
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 const MODEL_NAME = 'gemini-2.0-flash';
-
 const TIMEOUT_MS = 15000;
 
-// ─────────────────────────────────────────────
 // Utilities
-// ─────────────────────────────────────────────
 
 async function withTimeout<T>(promise: Promise<T>, ms: number = TIMEOUT_MS): Promise<T> {
   const timeout = new Promise<never>((_, reject) =>
@@ -61,13 +55,12 @@ function safeParse<T>(text: string, fallback: T): T {
   try {
     return JSON.parse(extractJson(text)) as T;
   } catch {
+    console.warn('[Busulla] JSON parse failed for text:', text.substring(0, 200));
     return fallback;
   }
 }
 
-// ─────────────────────────────────────────────
 // Gemini caller
-// ─────────────────────────────────────────────
 
 async function callGemini(prompt: string): Promise<string> {
   if (!genAI) throw new Error('Mungon VITE_GEMINI_API_KEY. Konfiguro çelësin API.');
@@ -75,12 +68,16 @@ async function callGemini(prompt: string): Promise<string> {
   const model = genAI.getGenerativeModel({ model: MODEL_NAME });
   const result = await withTimeout(model.generateContent(prompt));
   const response = result.response;
-  return response.text().trim();
+  const text = response.text().trim();
+  console.log('[Busulla] Gemini raw response:', text.substring(0, 300));
+  return text;
 }
 
-// ─────────────────────────────────────────────
+const STRICT_JSON_INSTRUCTION = `
+
+IMPORTANT: You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.`;
+
 // Career Prediction
-// ─────────────────────────────────────────────
 
 export const predictCareer = async (answers: QuizAnswer[]): Promise<PredictionResult> => {
   const localResult = classifyToPrediction(answers);
@@ -106,7 +103,7 @@ Kthe VETËM JSON të vlefshëm, pa asnjë tekst tjetër:
     {"career": "${localResult.alternatives[1]?.career || ''}", "confidence": ${localResult.alternatives[1]?.confidence || 0.4}, "description": "pse kjo alternativë"}
   ],
   "learningPath": ["hapi 1", "hapi 2", "hapi 3", "hapi 4", "hapi 5"]
-}`;
+}${STRICT_JSON_INSTRUCTION}`;
 
   try {
     const resp = await withRetry(async () => callGemini(prompt));
@@ -123,9 +120,7 @@ Kthe VETËM JSON të vlefshëm, pa asnjë tekst tjetër:
   return localResult;
 };
 
-// ─────────────────────────────────────────────
 // Career Roadmap Generation
-// ─────────────────────────────────────────────
 
 export const generateCareerRoadmap = async (career: string): Promise<CareerRoadmap> => {
   const fallback: CareerRoadmap = {
@@ -145,7 +140,7 @@ export const generateCareerRoadmap = async (career: string): Promise<CareerRoadm
   "careerPath": ["5 hapa tipikë të karrierës në Shqipëri"],
   "salaryRange": "diapazoni i pagës mujore në ALL për Shqipërinë",
   "jobDemand": "përshkrim i shkurtër i kërkesës në tregun e punës shqiptar"
-}`;
+}${STRICT_JSON_INSTRUCTION}`;
 
   try {
     const resp = await withRetry(async () => callGemini(prompt));
@@ -155,9 +150,7 @@ export const generateCareerRoadmap = async (career: string): Promise<CareerRoadm
   }
 };
 
-// ─────────────────────────────────────────────
 // Interview Question Generation
-// ─────────────────────────────────────────────
 
 export const generateDynamicQuestion = async (
   career: string,
@@ -199,11 +192,13 @@ KTHE VETËM JSON VALID:
   "question": "Pyetja në shqip (e qartë dhe koncize)",
   "type": "technical ose behavioral",
   "hints": ["hint 1 pa zbuluar përgjigjen", "hint 2", "hint 3"]
-}`;
+}${STRICT_JSON_INSTRUCTION}`;
 
     try {
       const text = await callGemini(prompt);
-      return safeParse(text, fallback);
+      const parsed = safeParse(text, fallback);
+      if (parsed.question && parsed.question.length > 5) return parsed;
+      return fallback;
     } catch {
       return fallback;
     }
@@ -228,9 +223,7 @@ function getFallbackQuestion(
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// ─────────────────────────────────────────────
 // Answer Evaluation
-// ─────────────────────────────────────────────
 
 export const evaluateAnswerWithFeedback = async (
   career: string,
@@ -239,49 +232,87 @@ export const evaluateAnswerWithFeedback = async (
   mode: InterviewMode,
   difficulty: DifficultyLevel,
 ): Promise<InterviewFeedback> => {
-  const fallback: InterviewFeedback = {
-    score: 60,
-    strengths: ['Përgjigjja është relevante'],
-    improvements: ['Shto më shumë detaje dhe shembuj'],
-    detailedFeedback: 'Përgjigjja ka bazë të mirë, por mund të thellohet më shumë me shembuj konkretë.',
-    technicalAccuracy: 60,
-    communication: 70,
-    problemSolving: 55,
-  };
+  if (!GEMINI_API_KEY) {
+    return estimateScoreFromAnswer(answer);
+  }
 
-  if (!GEMINI_API_KEY) return fallback;
-
-  return withRetry(async () => {
-    const prompt = `Si intervistues për ${career}, vlerëso këtë përgjigje.
+  const attempt = async (): Promise<InterviewFeedback> => {
+    const prompt = `Si intervistues ekspert për ${career}, vlerëso këtë përgjigje me rigorozitet.
 
 Pyetja: ${question}
-Përgjigjja: ${answer}
+Përgjigjja e kandidatit: ${answer}
 Lloji i intervistës: ${mode}
 Vështirësia: ${difficulty}
 
-KTHE VETËM JSON VALID:
+RREGULLAT E VLERËSIMIT (NDJEK STRIKT):
+- Përgjigje me 1-2 fjalë ose bosh: score 0-10
+- Përgjigje e shkurtër pa shembuj: score 10-30
+- Përgjigje mesatare me pak detaje: score 30-50
+- Përgjigje e mirë me shembuj: score 50-70
+- Përgjigje e detajuar me analitikë: score 70-90
+- Përgjigje e shkëlqyer, eksperte: score 90-100
+
+You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.
+
 {
-  "score": 0-100,
+  "score": <number 0-100 based on rules above>,
   "strengths": ["pika e fortë 1", "pika e fortë 2"],
   "improvements": ["përmirësim 1", "përmirësim 2"],
   "detailedFeedback": "Feedback i detajuar në shqip",
-  "technicalAccuracy": 0-100,
-  "communication": 0-100,
-  "problemSolving": 0-100
+  "technicalAccuracy": <number 0-100>,
+  "communication": <number 0-100>,
+  "problemSolving": <number 0-100>
 }`;
 
-    try {
-      const text = await callGemini(prompt);
-      return safeParse<InterviewFeedback>(text, fallback);
-    } catch {
-      return fallback;
+    const text = await callGemini(prompt);
+    const parsed = safeParse<InterviewFeedback | null>(text, null);
+
+    if (parsed && typeof parsed.score === 'number' && parsed.strengths && parsed.improvements) {
+      // Clamp score
+      parsed.score = Math.max(0, Math.min(100, parsed.score));
+      if (parsed.technicalAccuracy != null) parsed.technicalAccuracy = Math.max(0, Math.min(100, parsed.technicalAccuracy));
+      if (parsed.communication != null) parsed.communication = Math.max(0, Math.min(100, parsed.communication));
+      if (parsed.problemSolving != null) parsed.problemSolving = Math.max(0, Math.min(100, parsed.problemSolving));
+      return parsed;
     }
-  });
+
+    throw new Error('Invalid parsed feedback');
+  };
+
+  // Try twice before falling back
+  try {
+    return await withRetry(attempt, 1, 1500);
+  } catch (err) {
+    console.warn('[Busulla] evaluateAnswer failed after retries:', err);
+    return estimateScoreFromAnswer(answer);
+  }
 };
 
-// ─────────────────────────────────────────────
+function estimateScoreFromAnswer(answer: string): InterviewFeedback {
+  const wordCount = answer.trim().split(/\s+/).length;
+  let score: number;
+  if (wordCount <= 2) score = 5;
+  else if (wordCount <= 10) score = 20;
+  else if (wordCount <= 30) score = 45;
+  else if (wordCount <= 60) score = 65;
+  else score = 78;
+
+  return {
+    score,
+    strengths: wordCount > 10 ? ['Përgjigjja ka përmbajtje relevante'] : ['Kandidati u përpoq të përgjigjej'],
+    improvements: wordCount <= 10
+      ? ['Shto shumë më shumë detaje dhe shembuj konkretë', 'Përgjigjja ishte shumë e shkurtër']
+      : ['Mund të shtosh më shumë shembuj praktikë'],
+    detailedFeedback: wordCount <= 10
+      ? 'Përgjigjja ishte shumë e shkurtër. Në një intervistë reale, duhet të jepni përgjigje të detajuara me shembuj konkretë.'
+      : 'Përgjigjja ka bazë të mirë. Mund të përmirësohet duke shtuar shembuj më konkretë dhe duke treguar rezultate specifike.',
+    technicalAccuracy: Math.max(score - 10, 0),
+    communication: Math.min(score + 10, 100),
+    problemSolving: score,
+  };
+}
+
 // Adaptive Difficulty
-// ─────────────────────────────────────────────
 
 export const determineNextDifficulty = async (
   history: InterviewMessage[],
@@ -308,9 +339,7 @@ export const determineNextDifficulty = async (
   return currentDifficulty;
 };
 
-// ─────────────────────────────────────────────
 // Interview Report Generation
-// ─────────────────────────────────────────────
 
 export const generateInterviewReport = async (
   session: InterviewSession,
@@ -351,6 +380,22 @@ export const generateInterviewReport = async (
   const verdict = session.overallScore >= 70 ? 'hired' :
     session.overallScore >= 50 ? 'consider' : 'rejected';
 
+  const fallbackReport = {
+    summary: `Intervista përfundoi me rezultat ${session.overallScore}/100. ${verdict === 'hired' ? 'Kandidati tregon gatishmëri.' : verdict === 'consider' ? 'Ka potencial, por nevojiten përmirësime.' : 'Duhen më shumë përgatitje.'}`,
+    recommendations: ['Praktikoni më shumë intervista', 'Thelloni njohuritë teknike', 'Përgatitni shembuj konkretë'],
+    weakTopics: session.weakAreas.length > 0 ? session.weakAreas : ['Përgjigje më të detajuara'],
+    practiceSuggestions: ['Intervista simulate', 'Studime rasti', 'Rishikim i literaturës profesionale'],
+  };
+
+  if (!GEMINI_API_KEY) {
+    return {
+      sessionId: session.id, career: session.career, mode: session.mode,
+      overallScore: session.overallScore, verdict, ...fallbackReport,
+      categoryScores, answersReview: answers,
+      duration: session.endTime ? session.endTime - session.startTime : 0,
+    };
+  }
+
   const summaryPrompt = `Gjenero një raport përfundimtar për intervistën.
 
 Pozicioni: ${session.career}
@@ -359,7 +404,8 @@ Vendimi: ${verdict === 'hired' ? 'Pranuar' : verdict === 'consider' ? 'Në konsi
 Fusha të dobëta: ${session.weakAreas.join(', ') || 'Asnjë'}
 Fusha të forta: ${session.strongAreas.join(', ') || 'Asnjë'}
 
-KTHE VETËM JSON VALID:
+You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.
+
 {
   "summary": "Përmbledhje në 2-3 fjali në shqip",
   "recommendations": ["rekomandim 1", "rekomandim 2", "rekomandim 3"],
@@ -367,56 +413,38 @@ KTHE VETËM JSON VALID:
   "practiceSuggestions": ["sugjerim praktike 1", "sugjerim 2"]
 }`;
 
-  const fallbackReport = {
-    summary: `Intervista përfundoi me rezultat ${session.overallScore}/100. ${verdict === 'hired' ? 'Kandidati tregon gatishmëri.' : verdict === 'consider' ? 'Ka potencial, por nevojiten përmirësime.' : 'Duhen më shumë përgatitje.'}`,
-    recommendations: ['Praktikoni më shumë intervista', 'Thelloni njohuritë teknike', 'Përgatitni shembuj konkretë'],
-    weakTopics: session.weakAreas.length > 0 ? session.weakAreas : ['Përgjigje më të detajuara'],
-    practiceSuggestions: ['Intervista simulate', 'Studime rasti', 'Rishikim i literaturës profesionale'],
-  };
-
   try {
-    const text = await callGemini(summaryPrompt);
+    const text = await withRetry(async () => callGemini(summaryPrompt), 1, 1500);
     const aiReport = safeParse(text, fallbackReport);
 
     return {
-      sessionId: session.id,
-      career: session.career,
-      mode: session.mode,
-      overallScore: session.overallScore,
-      verdict,
-      summary: aiReport.summary,
-      categoryScores,
-      answersReview: answers,
-      recommendations: aiReport.recommendations,
-      weakTopics: aiReport.weakTopics,
-      practiceSuggestions: aiReport.practiceSuggestions,
+      sessionId: session.id, career: session.career, mode: session.mode,
+      overallScore: session.overallScore, verdict,
+      summary: aiReport.summary || fallbackReport.summary,
+      categoryScores, answersReview: answers,
+      recommendations: aiReport.recommendations?.length ? aiReport.recommendations : fallbackReport.recommendations,
+      weakTopics: aiReport.weakTopics?.length ? aiReport.weakTopics : fallbackReport.weakTopics,
+      practiceSuggestions: aiReport.practiceSuggestions?.length ? aiReport.practiceSuggestions : fallbackReport.practiceSuggestions,
       duration: session.endTime ? session.endTime - session.startTime : 0,
     };
   } catch {
     return {
-      sessionId: session.id,
-      career: session.career,
-      mode: session.mode,
-      overallScore: session.overallScore,
-      verdict,
-      ...fallbackReport,
-      categoryScores,
-      answersReview: answers,
+      sessionId: session.id, career: session.career, mode: session.mode,
+      overallScore: session.overallScore, verdict, ...fallbackReport,
+      categoryScores, answersReview: answers,
       duration: session.endTime ? session.endTime - session.startTime : 0,
     };
   }
 };
 
-// ─────────────────────────────────────────────
 // Hint Generator
-// ─────────────────────────────────────────────
 
 export const getHint = async (question: string, career: string): Promise<string> => {
   if (!GEMINI_API_KEY) return 'Mendo për përvojat tua të mëparshme dhe si mund të zbatohen këtu.';
 
   try {
     const text = await callGemini(
-      `Ti je mentor karriere. Për pyetjen: "${question}" në kontekstin e karrierës ${career}, jep një hint të shkurtër në shqip që ndihmon kandidatin pa zbuluar përgjigjen. Vetëm 1-2 fjali.`
+      `Ti je mentor karriere. Për pyetjen: "${question}" në kontekstin e karrierës ${career}, jep një hint të shkurtër në shqip që ndihmon kandidatin pa zbuluar përgjigjen. Vetëm 1-2 fjali. Mos përdor emoji.`
     );
     return text || 'Mendo për përvojat tua të mëparshme dhe si mund të zbatohen këtu.';
   } catch {
@@ -424,9 +452,7 @@ export const getHint = async (question: string, career: string): Promise<string>
   }
 };
 
-// ─────────────────────────────────────────────
 // Career Chat Assistant
-// ─────────────────────────────────────────────
 
 export const getCareerAssistantResponse = async (
   message: string,
@@ -459,6 +485,7 @@ RREGULLAT E TUA:
 - Ji i ngrohtë, inkurajues, dhe praktik
 - Jep këshilla konkrete dhe të zbatueshme për kontekstin shqiptar
 - Nëse pyetja nuk ka lidhje me karrierën, thuaj me mirësjellje që je i specializuar vetëm për karrierë
+- MOS përdor emoji në asnjë rast
 
 KONTEKSTI I PËRDORUESIT:
 ${contextParts.length > 0 ? contextParts.join('\n') : 'Asnjë kontekst specifik'}
@@ -472,9 +499,9 @@ Busulla:`;
 
     try {
       const text = await callGemini(prompt);
-      return text || 'Më vjen keq, nuk mund ta përpunoj këtë kërkesë tani. Provo përsëri!';
+      return text || 'Faleminderit për pyetjen! Si këshilltar karriere, jam këtu për të ndihmuar me orientimin profesional. Mund të pyesësh për karriera, universitete, ose përgatitjen për tregun e punës në Shqipëri.';
     } catch {
-      return 'Më vjen keq, provo ta riformulosh pyetjen me më shumë detaje.';
+      return 'Faleminderit për pyetjen! Për momentin nuk mund të lidhem me shërbimin AI. Megjithatë, mund të përdorësh kuizin e karrierës për të zbuluar rrugën tënde, ose intervistën simulate për tu praktikuar.';
     }
   });
 };
