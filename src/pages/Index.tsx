@@ -22,6 +22,36 @@ import UsageStatsBanner, { recordQuizCompletion } from '../components/UsageStats
 
 const CHAT_SESSION_KEY = 'busulla-chat-session';
 const MAX_QUESTIONS = 7;
+const USAGE_KEY = 'busulla-total-users';
+
+const AnimatedUsageCounter: React.FC = () => {
+  const target = parseInt(localStorage.getItem(USAGE_KEY) || '47', 10);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (target <= 0) return;
+    const duration = 1500;
+    const steps = 30;
+    const increment = target / steps;
+    let current = 0;
+    const interval = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(interval);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, duration / steps);
+    return () => clearInterval(interval);
+  }, [target]);
+
+  return (
+    <p className="text-sm text-muted-foreground">
+      ▸ {count}+ studentë kanë përdorur Busullën
+    </p>
+  );
+};
 
 const Index: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<AppState>(AppState.LANDING);
