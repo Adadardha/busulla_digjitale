@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AppState, QuizAnswer, PredictionResult, InterviewMode, DifficultyLevel,
@@ -24,6 +24,170 @@ const CHAT_SESSION_KEY = 'busulla-chat-session';
 const MAX_QUESTIONS = 7;
 const USAGE_KEY = 'busulla-total-users';
 
+// Interactive compass that follows mouse
+const InteractiveCompass: React.FC<{ isRevealing?: boolean }> = ({ isRevealing }) => {
+  const [rotation, setRotation] = useState(0);
+  const targetRotation = useRef(0);
+  const currentRotation = useRef(0);
+  const animFrameRef = useRef<number>(0);
+  const [glowing, setGlowing] = useState(false);
+  const [revealPhase, setRevealPhase] = useState<'idle' | 'spinning' | 'locking'>('idle');
+
+  // Mouse tracking for landing page
+  useEffect(() => {
+    if (isRevealing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI) + 90;
+      targetRotation.current = angle;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [isRevealing]);
+
+  // Smooth lerp animation
+  useEffect(() => {
+    if (isRevealing) return;
+
+    const animate = () => {
+      const diff = targetRotation.current - currentRotation.current;
+      // Normalize to -180..180
+      const normalized = ((diff + 540) % 360) - 180;
+      currentRotation.current += normalized * 0.06;
+      setRotation(currentRotation.current);
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+    animFrameRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animFrameRef.current);
+  }, [isRevealing]);
+
+  // Career reveal animation
+  useEffect(() => {
+    if (!isRevealing) {
+      setRevealPhase('idle');
+      setGlowing(false);
+      return;
+    }
+
+    setRevealPhase('spinning');
+    let spinStart = Date.now();
+    let frame: number;
+
+    const spinAnimate = () => {
+      const elapsed = Date.now() - spinStart;
+
+      if (elapsed < 1500) {
+        // Fast spin phase
+        const speed = 15 - (elapsed / 1500) * 12; // decelerate from 15 to 3
+        currentRotation.current += speed;
+        setRotation(currentRotation.current);
+        frame = requestAnimationFrame(spinAnimate);
+      } else {
+        // Lock phase - snap to north (0)
+        setRevealPhase('locking');
+        const lockTarget = Math.round(currentRotation.current / 360) * 360; // nearest full rotation
+        const lockAnimate = () => {
+          const diff = lockTarget - currentRotation.current;
+          if (Math.abs(diff) < 0.5) {
+            currentRotation.current = lockTarget;
+            setRotation(lockTarget);
+            setGlowing(true);
+            setTimeout(() => setGlowing(false), 1200);
+            return;
+          }
+          currentRotation.current += diff * 0.15;
+          setRotation(currentRotation.current);
+          frame = requestAnimationFrame(lockAnimate);
+        };
+        lockAnimate();
+      }
+    };
+
+    frame = requestAnimationFrame(spinAnimate);
+    return () => cancelAnimationFrame(frame);
+  }, [isRevealing]);
+
+  return (
+    <div className="relative inline-block">
+      <svg
+        width="160"
+        height="160"
+        viewBox="0 0 160 160"
+        className="md:w-[200px] md:h-[200px]"
+      >
+        {/* Outer ring */}
+        <circle cx="80" cy="80" r="74" stroke="hsl(var(--foreground))" strokeWidth="1.5" fill="none" opacity="0.3" />
+        <circle cx="80" cy="80" r="70" stroke="hsl(var(--foreground))" strokeWidth="0.5" fill="none" opacity="0.15" />
+
+        {/* Tick marks */}
+        {Array.from({ length: 36 }).map((_, i) => {
+          const angle = (i * 10) * Math.PI / 180;
+          const isMajor = i % 9 === 0;
+          const r1 = isMajor ? 62 : 66;
+          const r2 = 70;
+          return (
+            <line
+              key={i}
+              x1={80 + r1 * Math.sin(angle)}
+              y1={80 - r1 * Math.cos(angle)}
+              x2={80 + r2 * Math.sin(angle)}
+              y2={80 - r2 * Math.cos(angle)}
+              stroke="hsl(var(--foreground))"
+              strokeWidth={isMajor ? 1.5 : 0.5}
+              opacity={isMajor ? 0.6 : 0.2}
+            />
+          );
+        })}
+
+        {/* Cardinal labels */}
+        <text x="80" y="24" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="10" fontFamily="monospace" opacity="0.4">N</text>
+        <text x="80" y="142" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="10" fontFamily="monospace" opacity="0.4">S</text>
+        <text x="142" y="84" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="10" fontFamily="monospace" opacity="0.4">E</text>
+        <text x="18" y="84" textAnchor="middle" fill="hsl(var(--foreground))" fontSize="10" fontFamily="monospace" opacity="0.4">W</text>
+
+        {/* Rotating needle group */}
+        <g transform={`rotate(${rotation}, 80, 80)`}>
+          {/* North needle - with golden glow when locking */}
+          <polygon
+            points="80,20 75,75 80,68 85,75"
+            fill="hsl(var(--foreground))"
+            style={{
+              filter: glowing ? 'drop-shadow(0 0 8px #D4A520) drop-shadow(0 0 16px #D4A520)' : 'none',
+              transition: 'filter 0.3s ease',
+            }}
+          />
+          {/* South needle */}
+          <polygon
+            points="80,140 75,85 80,92 85,85"
+            fill="hsl(var(--foreground))"
+            opacity="0.25"
+          />
+        </g>
+
+        {/* Center dot */}
+        <circle cx="80" cy="80" r="3" fill="hsl(var(--foreground))" />
+        <circle cx="80" cy="80" r="5" stroke="hsl(var(--foreground))" strokeWidth="0.5" fill="none" opacity="0.3" />
+      </svg>
+
+      {/* Golden glow pulse overlay */}
+      {glowing && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: [0, 0.4, 0], scale: [0.8, 1.3, 1.5] }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(212, 165, 32, 0.3) 0%, transparent 70%)',
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
 const AnimatedUsageCounter: React.FC = () => {
   const target = parseInt(localStorage.getItem(USAGE_KEY) || '47', 10);
   const [count, setCount] = useState(0);
@@ -48,7 +212,7 @@ const AnimatedUsageCounter: React.FC = () => {
 
   return (
     <p className="text-sm text-muted-foreground">
-      ▸ {count}+ studentë kanë përdorur Busullën
+      {count}+ studente kane perdorur Bullen
     </p>
   );
 };
@@ -92,8 +256,6 @@ const Index: React.FC = () => {
       const result = await predictCareer(finalAnswers);
       setPrediction(result);
       recordQuizCompletion(result.primaryCareer);
-      // Increment usage counter
-      const USAGE_KEY = 'busulla-total-users';
       const current = parseInt(localStorage.getItem(USAGE_KEY) || '47', 10);
       localStorage.setItem(USAGE_KEY, String(current + 1));
       setCurrentStep(AppState.RESULTS);
@@ -179,7 +341,7 @@ const Index: React.FC = () => {
     if (!lastQ) return;
     try {
       const hint = await getHint(lastQ.content, interviewSession.career);
-      setInterviewSession(prev => prev ? { ...prev, messages: [...prev.messages, { role: 'assistant' as const, content: `💡 Hint: ${hint}`, timestamp: Date.now(), metadata: { isHint: true } }], hintsUsed: prev.hintsUsed + 1 } : prev);
+      setInterviewSession(prev => prev ? { ...prev, messages: [...prev.messages, { role: 'assistant' as const, content: `Hint: ${hint}`, timestamp: Date.now(), metadata: { isHint: true } }], hintsUsed: prev.hintsUsed + 1 } : prev);
     } catch {}
   }, [interviewSession]);
 
@@ -215,13 +377,9 @@ const Index: React.FC = () => {
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
             <circle cx="14" cy="14" r="13" stroke="hsl(var(--foreground))" strokeWidth="1.5" fill="none" />
             <circle cx="14" cy="14" r="2" fill="hsl(var(--foreground))" />
-            {/* N pointer */}
             <polygon points="14,2 12,10 14,8 16,10" fill="hsl(var(--foreground))" />
-            {/* S pointer */}
             <polygon points="14,26 12,18 14,20 16,18" fill="hsl(var(--foreground))" opacity="0.4" />
-            {/* E pointer */}
             <polygon points="26,14 18,12 20,14 18,16" fill="hsl(var(--foreground))" opacity="0.4" />
-            {/* W pointer */}
             <polygon points="2,14 10,12 8,14 10,16" fill="hsl(var(--foreground))" opacity="0.4" />
           </svg>
           <span className="font-heading font-bold text-base md:text-lg tracking-tighter uppercase leading-none">Busulla</span>
@@ -253,6 +411,7 @@ const Index: React.FC = () => {
                   {TRANSLATIONS.landing.subtitle}
                 </p>
               </div>
+              <InteractiveCompass />
               {loadingError && <ErrorMessage message={loadingError} />}
               <button onClick={() => setCurrentStep(AppState.QUIZ)} className="px-8 py-4 md:px-16 md:py-8 bg-foreground text-background font-heading font-black text-xl md:text-3xl uppercase brutalist-button transition-all hover:scale-105">
                 {TRANSLATIONS.common.start} →
@@ -269,6 +428,7 @@ const Index: React.FC = () => {
           {currentStep === AppState.ANALYZING && (
             <motion.div key="analyzing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-6 md:space-y-8 max-w-2xl w-full relative z-10">
               <h2 className="text-3xl md:text-5xl font-heading font-bold">{TRANSLATIONS.analyzing.title}</h2>
+              <InteractiveCompass isRevealing />
               <LoadingSpinner text={TRANSLATIONS.analyzing.subtitle} />
             </motion.div>
           )}

@@ -1,8 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MessageSquare, X, RotateCcw, ChevronDown, Compass, GraduationCap, BarChart3 } from 'lucide-react';
 import { ChatMessage, ChatSession, QuickAction } from '../../types';
 import { TRANSLATIONS, QUICK_ACTIONS } from '../../i18n';
 import { getCareerAssistantResponse } from '../../services/gemini';
+
+const QUICK_ACTION_ICONS: Record<string, React.ReactNode> = {
+  career: <Compass className="w-4 h-4" />,
+  university: <GraduationCap className="w-4 h-4" />,
+  market: <BarChart3 className="w-4 h-4" />,
+};
 
 interface CareerAssistantProps {
   isOpen: boolean;
@@ -91,7 +98,7 @@ const CareerAssistant: React.FC<CareerAssistantProps> = ({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        {isOpen ? '✕' : '💬'}
+        {isOpen ? <X className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
         {hasUnread && !isOpen && (
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full" />
         )}
@@ -120,8 +127,12 @@ const CareerAssistant: React.FC<CareerAssistantProps> = ({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={clearChat} className="text-xs px-2 py-1 border border-border hover:bg-foreground/10 transition-all" title="Bisedë e re">↺</button>
-                  <button onClick={onToggle} className="text-xs px-2 py-1 border border-border hover:bg-foreground/10 transition-all">↓</button>
+                  <button onClick={clearChat} className="p-1.5 border border-border hover:bg-foreground/10 transition-all" title="Bisedë e re">
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                  <button onClick={onToggle} className="p-1.5 border border-border hover:bg-foreground/10 transition-all">
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -138,7 +149,7 @@ const CareerAssistant: React.FC<CareerAssistantProps> = ({
                         onClick={() => sendMessage(action.prompt)}
                         className="w-full p-3 text-left text-xs border border-border hover:bg-foreground/10 transition-all flex items-center gap-2"
                       >
-                        <span className="text-lg">{action.icon}</span>
+                        <span className="text-muted-foreground">{QUICK_ACTION_ICONS[action.icon] || <Compass className="w-4 h-4" />}</span>
                         <span className="font-medium">{action.label}</span>
                       </button>
                     ))}
@@ -186,9 +197,10 @@ const CareerAssistant: React.FC<CareerAssistantProps> = ({
                   <button
                     key={action.id}
                     onClick={() => sendMessage(action.prompt)}
-                    className="px-3 py-1 text-xs border border-border hover:bg-foreground/10 transition-all whitespace-nowrap"
+                    className="px-3 py-1 text-xs border border-border hover:bg-foreground/10 transition-all whitespace-nowrap flex items-center gap-1.5"
                   >
-                    {action.icon} {action.label}
+                    <span className="text-muted-foreground">{QUICK_ACTION_ICONS[action.icon] || <Compass className="w-3 h-3" />}</span>
+                    {action.label}
                   </button>
                 ))}
               </div>

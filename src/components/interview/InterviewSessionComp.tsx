@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Lightbulb, Check, ArrowUp } from 'lucide-react';
 import { InterviewSession as InterviewSessionType } from '../../types';
 import { TRANSLATIONS, DIFFICULTY_INFO } from '../../i18n';
 
@@ -52,7 +53,7 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
               {TRANSLATIONS.interviewSession.title}
             </h2>
             <p className="text-xs md:text-sm text-muted-foreground mt-1">
-              {session.career} • {session.questionsAnswered} pyetje
+              {session.career} -- {session.questionsAnswered} pyetje
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -113,10 +114,14 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
                       </span>
                     </div>
                     {msg.metadata.feedback.strengths.length > 0 && (
-                      <p className="text-xs text-success mb-1">✓ {msg.metadata.feedback.strengths[0]}</p>
+                      <p className="text-xs text-success mb-1 flex items-center gap-1.5">
+                        <Check className="w-3 h-3" /> {msg.metadata.feedback.strengths[0]}
+                      </p>
                     )}
                     {msg.metadata.feedback.improvements.length > 0 && (
-                      <p className="text-xs text-warning">↑ {msg.metadata.feedback.improvements[0]}</p>
+                      <p className="text-xs text-warning flex items-center gap-1.5">
+                        <ArrowUp className="w-3 h-3" /> {msg.metadata.feedback.improvements[0]}
+                      </p>
                     )}
                   </motion.div>
                 )}
@@ -163,9 +168,9 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
             <button
               onClick={onRequestHint}
               disabled={hintsRemaining <= 0 || isGeneratingQuestion || isEvaluating}
-              className="brutalist-border p-4 hover:bg-foreground/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed text-sm md:text-base"
+              className="brutalist-border p-4 hover:bg-foreground/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed text-sm md:text-base flex items-center justify-center gap-2"
             >
-              💡 {TRANSLATIONS.interviewSession.getHint} ({hintsRemaining})
+              <Lightbulb className="w-4 h-4" /> {TRANSLATIONS.interviewSession.getHint} ({hintsRemaining})
             </button>
             {session.questionsAnswered >= 3 && (
               <button

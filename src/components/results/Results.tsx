@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
+import { BookOpen, GraduationCap, TrendingUp, Banknote, BarChart3 } from 'lucide-react';
 import { PredictionResult, CareerRoadmap } from '../../types';
 import { TRANSLATIONS } from '../../i18n';
 import { generateCareerRoadmap } from '../../services/gemini';
@@ -140,19 +141,21 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
           {roadmapError && <ErrorMessage message={TRANSLATIONS.common.error} onRetry={loadRoadmap} />}
           {roadmap && (
             <div className="space-y-4 md:space-y-6">
-              <RoadmapSection icon="📚" title={TRANSLATIONS.results.roadmapSubjects} items={roadmap.subjects} />
-              <RoadmapSection icon="🎓" title={TRANSLATIONS.results.roadmapUniversities} items={roadmap.universities} />
-              <RoadmapSection icon="📈" title={TRANSLATIONS.results.roadmapCareerPath} items={roadmap.careerPath} numbered />
+              <RoadmapSection icon={<BookOpen className="w-4 h-4" />} title={TRANSLATIONS.results.roadmapSubjects} items={roadmap.subjects} />
+              <RoadmapSection icon={<GraduationCap className="w-4 h-4" />} title={TRANSLATIONS.results.roadmapUniversities} items={roadmap.universities} />
+              <RoadmapSection icon={<TrendingUp className="w-4 h-4" />} title={TRANSLATIONS.results.roadmapCareerPath} items={roadmap.careerPath} numbered />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 brutalist-border bg-foreground/5">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                    💰 {TRANSLATIONS.results.roadmapSalary}
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
+                    <Banknote className="w-3.5 h-3.5" />
+                    {TRANSLATIONS.results.roadmapSalary}
                   </p>
                   <p className="font-bold text-lg">{roadmap.salaryRange}</p>
                 </div>
                 <div className="p-4 brutalist-border bg-foreground/5">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                    📊 {TRANSLATIONS.results.roadmapDemand}
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    {TRANSLATIONS.results.roadmapDemand}
                   </p>
                   <p className="font-bold text-lg">{roadmap.jobDemand}</p>
                 </div>
@@ -219,20 +222,20 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
 };
 
 const RoadmapSection: React.FC<{
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   items: string[];
   numbered?: boolean;
 }> = ({ icon, title, items, numbered }) => (
   <div className="p-4 brutalist-border bg-foreground/5">
-    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+    <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
       {icon} {title}
     </p>
     <ul className="space-y-2">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-2 text-sm">
           <span className="text-muted-foreground font-mono text-xs mt-0.5">
-            {numbered ? `${i + 1}.` : '•'}
+            {numbered ? `${i + 1}.` : '--'}
           </span>
           <span>{item}</span>
         </li>

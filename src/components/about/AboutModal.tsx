@@ -1,11 +1,19 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Target, FlaskConical, UsersRound, Cpu } from 'lucide-react';
 import { TRANSLATIONS } from '../../i18n';
 
 interface AboutModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const SECTION_ICONS: Record<string, React.ReactNode> = {
+  problem: <Target className="w-4 h-4 shrink-0" />,
+  methodology: <FlaskConical className="w-4 h-4 shrink-0" />,
+  team: <UsersRound className="w-4 h-4 shrink-0" />,
+  tech: <Cpu className="w-4 h-4 shrink-0" />,
+};
 
 const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   return (
@@ -30,18 +38,18 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <h2 className="text-2xl md:text-3xl font-heading font-bold">{TRANSLATIONS.about.title}</h2>
                 <p className="text-sm text-muted-foreground mt-1">{TRANSLATIONS.about.subtitle}</p>
               </div>
-              <button onClick={onClose} className="text-xl hover:text-muted-foreground transition-colors">✕</button>
+              <button onClick={onClose} className="text-xl hover:text-muted-foreground transition-colors">x</button>
             </div>
 
             <div className="space-y-6">
-              <Section title={`🎯 ${TRANSLATIONS.about.problem}`} text={TRANSLATIONS.about.problemText} />
-              <Section title={`🔬 ${TRANSLATIONS.about.methodology}`} text={TRANSLATIONS.about.methodologyText} />
-              <Section title={`👥 ${TRANSLATIONS.about.team}`} text={TRANSLATIONS.about.teamText} />
-              <Section title={`⚡ ${TRANSLATIONS.about.tech}`} text={TRANSLATIONS.about.techText} />
+              <Section icon={SECTION_ICONS.problem} title={TRANSLATIONS.about.problem} text={TRANSLATIONS.about.problemText} />
+              <Section icon={SECTION_ICONS.methodology} title={TRANSLATIONS.about.methodology} text={TRANSLATIONS.about.methodologyText} />
+              <Section icon={SECTION_ICONS.team} title={TRANSLATIONS.about.team} text={TRANSLATIONS.about.teamText} />
+              <Section icon={SECTION_ICONS.tech} title={TRANSLATIONS.about.tech} text={TRANSLATIONS.about.techText} />
 
               <div className="pt-4 border-t border-border text-center">
                 <p className="text-xs text-muted-foreground">
-                  Festivali Kombëtar i Shkencës 2026 • Shqipëri
+                  Festivali Kombëtar i Shkencës 2026 -- Shqipëri
                 </p>
               </div>
             </div>
@@ -52,9 +60,9 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-const Section: React.FC<{ title: string; text: string }> = ({ title, text }) => (
+const Section: React.FC<{ icon: React.ReactNode; title: string; text: string }> = ({ icon, title, text }) => (
   <div className="p-4 brutalist-border bg-foreground/5">
-    <h3 className="font-bold mb-2">{title}</h3>
+    <h3 className="font-bold mb-2 flex items-center gap-2">{icon} {title}</h3>
     <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>
   </div>
 );
