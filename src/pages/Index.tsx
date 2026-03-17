@@ -62,6 +62,10 @@ const Index: React.FC = () => {
       const result = await predictCareer(finalAnswers);
       setPrediction(result);
       recordQuizCompletion(result.primaryCareer);
+      // Increment usage counter
+      const USAGE_KEY = 'busulla-total-users';
+      const current = parseInt(localStorage.getItem(USAGE_KEY) || '47', 10);
+      localStorage.setItem(USAGE_KEY, String(current + 1));
       setCurrentStep(AppState.RESULTS);
     } catch (error) {
       console.error(error);
