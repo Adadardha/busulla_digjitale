@@ -227,6 +227,7 @@ const Index: React.FC = () => {
               <button onClick={() => setCurrentStep(AppState.QUIZ)} className="px-8 py-4 md:px-16 md:py-8 bg-foreground text-background font-heading font-black text-xl md:text-3xl uppercase brutalist-button transition-all hover:scale-105">
                 {TRANSLATIONS.common.start} →
               </button>
+              <AnimatedUsageCounter />
               <UsageStatsBanner />
             </motion.div>
           )}
