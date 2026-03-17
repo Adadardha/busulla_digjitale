@@ -182,13 +182,19 @@ const Index: React.FC = () => {
 
       <nav className="fixed top-0 left-0 w-full p-4 md:p-6 flex justify-between items-center z-50 backdrop-blur-sm bg-background/80 border-b border-border">
         <div className="flex items-center gap-3 md:gap-4">
-          <div className="w-6 h-6 md:w-8 md:h-8 border-2 border-foreground rotate-45 flex items-center justify-center bg-foreground text-background font-bold">
-            <span className="text-[10px] md:text-[12px] -rotate-45">B</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="font-heading font-bold text-base md:text-lg tracking-tighter uppercase leading-none">Busulla</span>
-            <span className="text-[8px] md:text-[10px] font-mono text-muted-foreground uppercase tracking-[0.3em]">EDICION_PRO</span>
-          </div>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="shrink-0">
+            <circle cx="14" cy="14" r="13" stroke="hsl(var(--foreground))" strokeWidth="1.5" fill="none" />
+            <circle cx="14" cy="14" r="2" fill="hsl(var(--foreground))" />
+            {/* N pointer */}
+            <polygon points="14,2 12,10 14,8 16,10" fill="hsl(var(--foreground))" />
+            {/* S pointer */}
+            <polygon points="14,26 12,18 14,20 16,18" fill="hsl(var(--foreground))" opacity="0.4" />
+            {/* E pointer */}
+            <polygon points="26,14 18,12 20,14 18,16" fill="hsl(var(--foreground))" opacity="0.4" />
+            {/* W pointer */}
+            <polygon points="2,14 10,12 8,14 10,16" fill="hsl(var(--foreground))" opacity="0.4" />
+          </svg>
+          <span className="font-heading font-bold text-base md:text-lg tracking-tighter uppercase leading-none">Busulla</span>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setIsAboutOpen(true)} className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all">
