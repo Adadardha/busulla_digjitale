@@ -121,15 +121,90 @@ Kthe VETËM JSON të vlefshëm, pa asnjë tekst tjetër:
 };
 
 // Career Roadmap Generation
-
-export const generateCareerRoadmap = async (career: string): Promise<CareerRoadmap> => {
-  const fallback: CareerRoadmap = {
-    subjects: ['Matematikë', 'Fizikë', 'Informatikë'],
-    universities: ['Universiteti i Tiranës', 'Universiteti Politeknik i Tiranës'],
-    careerPath: ['Studime Bachelor', 'Praktikë/Stazh', 'Pozicion Junior', 'Pozicion Senior', 'Menaxher/Ekspert'],
-    salaryRange: '40,000 - 120,000 ALL/muaj',
-    jobDemand: 'Kërkesë e lartë',
+function getLocalRoadmap(career: string): CareerRoadmap {
+  const roadmaps: Record<string, CareerRoadmap> = {
+    'Zhvillues Software': {
+      subjects: ['Matematikë', 'Informatikë', 'Fizikë', 'Logjikë', 'Anglisht'],
+      universities: ['Fakulteti i Shkencave Natyrore (FSHN)', 'Universiteti Politeknik i Tiranës', 'UET Tiranë', 'EPOKA University'],
+      careerPath: ['Studime Bachelor Informatikë', 'Praktikë në kompani tech', 'Junior Developer', 'Mid-level Developer', 'Senior / Tech Lead'],
+      salaryRange: '60,000 - 200,000 ALL/muaj',
+      jobDemand: 'Kërkesë shumë e lartë — tregu shqiptar dhe remote',
+    },
+    'Shkencëtar të Dhënash': {
+      subjects: ['Matematikë', 'Statistikë', 'Informatikë', 'Fizikë', 'Anglisht'],
+      universities: ['FSHN Tiranë', 'Universiteti Politeknik', 'UET', 'EPOKA University'],
+      careerPath: ['Bachelor Matematikë/Informatikë', 'Certifikime ML/AI', 'Data Analyst Junior', 'Data Scientist', 'Lead Data Scientist'],
+      salaryRange: '70,000 - 220,000 ALL/muaj',
+      jobDemand: 'Kërkesë në rritje të shpejtë në Shqipëri dhe rajon',
+    },
+    'Dizajner UX/UI': {
+      subjects: ['Art', 'Informatikë', 'Psikologji', 'Anglisht', 'Matematikë'],
+      universities: ['Akademia e Arteve Tiranë', 'UET', 'POLIS University', 'Shkolla e Dizajnit'],
+      careerPath: ['Bachelor Dizajn/Arteve', 'Portfolio personale', 'Junior Designer', 'UI/UX Designer', 'Lead Designer / Art Director'],
+      salaryRange: '50,000 - 150,000 ALL/muaj',
+      jobDemand: 'Kërkesë e mirë veçanërisht për agjenci digjitale',
+    },
+    'Menaxher Projekti': {
+      subjects: ['Matematikë', 'Ekonomi', 'Gjuhë Shqipe', 'Anglisht', 'Informatikë'],
+      universities: ['Fakulteti Ekonomik UT', 'UBT', 'UET', 'Universiteti Marin Barleti'],
+      careerPath: ['Bachelor Ekonomi/Biznes', 'Asistent Projekti', 'Koordinator', 'Project Manager', 'Senior PM / Drejtues'],
+      salaryRange: '60,000 - 180,000 ALL/muaj',
+      jobDemand: 'Kërkesë konstante në sektorin publik dhe privat',
+    },
+    'Sipërmarrës / Themelues Startup': {
+      subjects: ['Ekonomi', 'Matematikë', 'Anglisht', 'Informatikë', 'Histori'],
+      universities: ['Fakulteti Ekonomik UT', 'UET', 'EPOKA', 'Universiteti Marin Barleti'],
+      careerPath: ['Bachelor Biznes/Ekonomi', 'Përvojë në startup', 'Biznes i vogël', 'Startup me financim', 'Kompani e qëndrueshme'],
+      salaryRange: 'E ndryshueshme — 30,000 deri +500,000 ALL/muaj',
+      jobDemand: 'Ekosistemi startup shqiptar në zhvillim të shpejtë',
+    },
+    'Psikolog / Këshilltar': {
+      subjects: ['Biologji', 'Sociologji', 'Gjuhë Shqipe', 'Filozofi', 'Anglisht'],
+      universities: ['Fakulteti i Shkencave Sociale UT', 'Universiteti Aleksandër Moisiu Durrës', 'UET'],
+      careerPath: ['Bachelor Psikologji', 'Master Klinik', 'Praktikë e mbikëqyrur', 'Psikolog i licencuar', 'Praktikë private'],
+      salaryRange: '40,000 - 120,000 ALL/muaj',
+      jobDemand: 'Kërkesë në rritje — shëndet mendor në fokus',
+    },
+    'Mjek / Profesionist Shëndetësor': {
+      subjects: ['Biologji', 'Kimi', 'Fizikë', 'Matematikë', 'Anglisht'],
+      universities: ['Universiteti i Mjekësisë Tiranë', 'UAMD Durrës — Infermieri', 'UMB'],
+      careerPath: ['Fakulteti i Mjekësisë (6 vjet)', 'Rezidencë (3-5 vjet)', 'Mjek i licencuar', 'Specializim', 'Mjek Specialist'],
+      salaryRange: '60,000 - 250,000 ALL/muaj',
+      jobDemand: 'Kërkesë konstante dhe e lartë',
+    },
+    'Menaxher Marketingu': {
+      subjects: ['Ekonomi', 'Anglisht', 'Informatikë', 'Sociologji', 'Art'],
+      universities: ['Fakulteti Ekonomik UT', 'UET', 'Universiteti Marin Barleti', 'EPOKA'],
+      careerPath: ['Bachelor Marketing/Ekonomi', 'Asistent Marketing', 'Specialist Digital', 'Marketing Manager', 'CMO / Drejtues'],
+      salaryRange: '50,000 - 160,000 ALL/muaj',
+      jobDemand: 'Kërkesë e mirë veçanërisht digital marketing',
+    },
+    'Inxhinier / Arkitekt': {
+      subjects: ['Matematikë', 'Fizikë', 'Kimi', 'Vizatim Teknik', 'Informatikë'],
+      universities: ['Universiteti Politeknik i Tiranës', 'POLIS University', 'UAMD'],
+      careerPath: ['Bachelor Inxhinieri/Arkitekturë', 'Praktikë profesionale', 'Inxhinier Junior', 'Inxhinier i Licencuar', 'Drejtues Projekti'],
+      salaryRange: '50,000 - 170,000 ALL/muaj',
+      jobDemand: 'Kërkesë e qëndrueshme — ndërtim dhe infrastrukturë',
+    },
+    'Mësues / Trajner': {
+      subjects: ['Gjuhë Shqipe', 'Pedagogji', 'Psikologji', 'Matematikë', 'Anglisht'],
+      universities: ['Fakulteti i Shkencave Sociale UT', 'Universiteti Fan Noli Korçë', 'UAMD'],
+      careerPath: ['Bachelor Mësuesi', 'Master Profesional', 'Mësues i ri', 'Mësues i kualifikuar', 'Drejtor/Trajner'],
+      salaryRange: '35,000 - 90,000 ALL/muaj',
+      jobDemand: 'Kërkesë konstante — sektor publik dhe privat',
+    },
   };
+
+  return roadmaps[career] || {
+    subjects: ['Matematikë', 'Anglisht', 'Informatikë', 'Gjuhë Shqipe', 'Sociologji'],
+    universities: ['Universiteti i Tiranës', 'UET', 'EPOKA University'],
+    careerPath: ['Studime Bachelor', 'Praktikë profesionale', 'Pozicion fillestar', 'Zhvillim profesional', 'Ekspert i fushës'],
+    salaryRange: '40,000 - 120,000 ALL/muaj',
+    jobDemand: 'Kërkesë e mirë në tregun shqiptar',
+  };
+}
+export const generateCareerRoadmap = async (career: string): Promise<CareerRoadmap> => {
+  const fallback: CareerRoadmap = getLocalRoadmap(career);
 
   if (!GEMINI_API_KEY) return fallback;
 
