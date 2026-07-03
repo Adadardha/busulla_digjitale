@@ -104,6 +104,12 @@
     transform: translate(3px, 3px);
   }
 
+  .custom-scrollbar::-webkit-scrollbar { width: 2px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: hsl(var(--foreground) / 0.3); }
+
+
+
   /* Aurora / cosmic background for the landing hero */
   .aurora-bg {
     position: absolute;
