@@ -329,10 +329,17 @@ const Index: React.FC = () => {
     setInterviewSession(prev => prev ? { ...prev, messages: updatedMessages } : prev);
     setInterviewInput('');
     setIsEvaluating(true);
+    const evalStart = Date.now();
     try {
       const lastQuestion = [...interviewSession.messages].reverse().find(m => m.role === 'assistant');
       if (!lastQuestion) return;
       const feedback = await evaluateAnswerWithFeedback(interviewSession.career, lastQuestion.content, interviewInput, interviewSession.mode, interviewSession.currentDifficulty);
+      // Ensure the AI-thinking state is visible for at least 1.5s to communicate deep processing
+      const elapsed = Date.now() - evalStart;
+      const MIN_THINKING_MS = 1500;
+      if (elapsed < MIN_THINKING_MS) {
+        await new Promise(r => setTimeout(r, MIN_THINKING_MS - elapsed));
+      }
       const messageWithFeedback = { ...userMessage, metadata: { feedback } };
       const newQA = interviewSession.questionsAnswered + 1;
       const newScore = Math.round((interviewSession.overallScore * interviewSession.questionsAnswered + feedback.score) / newQA);
