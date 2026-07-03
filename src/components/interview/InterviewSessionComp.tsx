@@ -130,17 +130,41 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
           </AnimatePresence>
 
           {(isGeneratingQuestion || isEvaluating) && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 brutalist-border bg-foreground/5 mr-0 md:mr-8">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Intervistues</p>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-foreground rounded-full animate-bounce" />
-                  <span className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                  <span className="w-2 h-2 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 brutalist-border bg-foreground/5 mr-0 md:mr-8">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  {isEvaluating ? 'Feedback' : 'Intervistues'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-foreground rounded-full animate-bounce" />
+                    <span className="w-1.5 h-1.5 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
+                    <span className="w-1.5 h-1.5 bg-foreground rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+                  </div>
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+                    {isEvaluating ? TRANSLATIONS.interviewSession.evaluating : TRANSLATIONS.interviewSession.typing}
+                  </span>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {isEvaluating ? TRANSLATIONS.interviewSession.evaluating : TRANSLATIONS.interviewSession.typing}
-                </span>
+              </div>
+
+              {/* Skeleton lines — communicate that Gemini is thinking */}
+              <div className="space-y-2">
+                <div className="h-3 bg-foreground/10 relative overflow-hidden" style={{ width: '92%' }}>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/20 to-transparent animate-[shimmer_1.5s_infinite]" />
+                </div>
+                <div className="h-3 bg-foreground/10 relative overflow-hidden" style={{ width: '78%' }}>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/20 to-transparent animate-[shimmer_1.5s_infinite]" style={{ animationDelay: '0.2s' }} />
+                </div>
+                <div className="h-3 bg-foreground/10 relative overflow-hidden" style={{ width: '85%' }}>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/20 to-transparent animate-[shimmer_1.5s_infinite]" style={{ animationDelay: '0.4s' }} />
+                </div>
+                {isEvaluating && (
+                  <div className="pt-2 mt-2 border-t border-border grid grid-cols-3 gap-2">
+                    <SkeletonMetric label="Teknike" />
+                    <SkeletonMetric label="Komunikim" />
+                    <SkeletonMetric label="Zgjidhje" />
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
