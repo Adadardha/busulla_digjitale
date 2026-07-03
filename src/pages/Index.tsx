@@ -442,7 +442,7 @@ const Index: React.FC = () => {
               </div>
               <InteractiveCompass />
               {loadingError && <ErrorMessage message={loadingError} />}
-              <button onClick={() => setCurrentStep(AppState.QUIZ)} className="px-8 py-4 md:px-16 md:py-8 bg-foreground text-background font-heading font-black text-xl md:text-3xl uppercase brutalist-button transition-all hover:scale-105">
+              <button onClick={handleStartClick} className="px-8 py-4 md:px-16 md:py-8 bg-foreground text-background font-heading font-black text-xl md:text-3xl uppercase brutalist-button transition-all hover:scale-105">
                 {TRANSLATIONS.common.start} →
               </button>
               <AnimatedUsageCounter />
@@ -480,8 +480,15 @@ const Index: React.FC = () => {
         </AnimatePresence>
       </main>
 
-      <CareerAssistant isOpen={isChatOpen} onToggle={() => setIsChatOpen(!isChatOpen)} session={chatSession} onSessionUpdate={setChatSession} careerContext={prediction?.primaryCareer} weakAreas={interviewSession?.weakAreas} />
+      {CHAT_ENABLED && (
+        <CareerAssistant isOpen={isChatOpen} onToggle={() => setIsChatOpen(!isChatOpen)} session={chatSession} onSessionUpdate={setChatSession} careerContext={prediction?.primaryCareer} weakAreas={interviewSession?.weakAreas} />
+      )}
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      <PrivacyGate
+        isOpen={isPrivacyGateOpen}
+        onAgree={handlePrivacyAgree}
+        onCancel={() => setIsPrivacyGateOpen(false)}
+      />
     </div>
   );
 };
