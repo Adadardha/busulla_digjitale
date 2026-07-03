@@ -18,11 +18,15 @@ import InterviewSessionComponent from '../components/interview/InterviewSessionC
 import InterviewReport from '../components/interview/InterviewReport';
 import CareerAssistant from '../components/chat/CareerAssistant';
 import AboutModal from '../components/about/AboutModal';
+import PrivacyGate from '../components/PrivacyGate';
 import UsageStatsBanner, { recordQuizCompletion } from '../components/UsageStats';
 
 const CHAT_SESSION_KEY = 'busulla-chat-session';
+const PRIVACY_CONSENT_KEY = 'busulla-privacy-consent';
 const MAX_QUESTIONS = 7;
 const USAGE_KEY = 'busulla-total-users';
+const USAGE_BASELINE = 47;
+const CHAT_ENABLED = Boolean(import.meta.env.VITE_GEMINI_API_KEY);
 
 // Interactive compass that follows mouse
 const InteractiveCompass: React.FC<{ isRevealing?: boolean }> = ({ isRevealing }) => {
@@ -189,7 +193,8 @@ const InteractiveCompass: React.FC<{ isRevealing?: boolean }> = ({ isRevealing }
 };
 
 const AnimatedUsageCounter: React.FC = () => {
-  const target = parseInt(localStorage.getItem(USAGE_KEY) || '47', 10);
+  const stored = parseInt(localStorage.getItem(USAGE_KEY) || String(USAGE_BASELINE), 10);
+  const target = Math.max(stored, USAGE_BASELINE);
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -212,7 +217,7 @@ const AnimatedUsageCounter: React.FC = () => {
 
   return (
     <p className="text-sm text-muted-foreground">
-      {count}+ studente kane perdorur Bullen
+      {count}+ studentë kanë përdorur Busullën
     </p>
   );
 };
@@ -234,6 +239,7 @@ const Index: React.FC = () => {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isPrivacyGateOpen, setIsPrivacyGateOpen] = useState(false);
   const [chatSession, setChatSession] = useState<ChatSession>(() => {
     try {
       const saved = localStorage.getItem(CHAT_SESSION_KEY);
@@ -246,6 +252,22 @@ const Index: React.FC = () => {
     try { localStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(chatSession)); } catch {}
   }, [chatSession]);
 
+  const handleStartClick = () => {
+    // Show privacy gate on first run only
+    const hasConsented = localStorage.getItem(PRIVACY_CONSENT_KEY) === 'true';
+    if (hasConsented) {
+      setCurrentStep(AppState.QUIZ);
+    } else {
+      setIsPrivacyGateOpen(true);
+    }
+  };
+
+  const handlePrivacyAgree = () => {
+    localStorage.setItem(PRIVACY_CONSENT_KEY, 'true');
+    setIsPrivacyGateOpen(false);
+    setCurrentStep(AppState.QUIZ);
+  };
+
   const processResults = async (finalAnswers: QuizAnswer[]) => {
     setCurrentStep(AppState.ANALYZING);
     setIsLoading(true);
@@ -256,8 +278,8 @@ const Index: React.FC = () => {
       const result = await predictCareer(finalAnswers);
       setPrediction(result);
       recordQuizCompletion(result.primaryCareer);
-      const current = parseInt(localStorage.getItem(USAGE_KEY) || '47', 10);
-      localStorage.setItem(USAGE_KEY, String(current + 1));
+      const current = parseInt(localStorage.getItem(USAGE_KEY) || String(USAGE_BASELINE), 10);
+      localStorage.setItem(USAGE_KEY, String(Math.max(current, USAGE_BASELINE) + 1));
       setCurrentStep(AppState.RESULTS);
     } catch (error) {
       console.error(error);
@@ -307,10 +329,17 @@ const Index: React.FC = () => {
     setInterviewSession(prev => prev ? { ...prev, messages: updatedMessages } : prev);
     setInterviewInput('');
     setIsEvaluating(true);
+    const evalStart = Date.now();
     try {
       const lastQuestion = [...interviewSession.messages].reverse().find(m => m.role === 'assistant');
       if (!lastQuestion) return;
       const feedback = await evaluateAnswerWithFeedback(interviewSession.career, lastQuestion.content, interviewInput, interviewSession.mode, interviewSession.currentDifficulty);
+      // Ensure the AI-thinking state is visible for at least 1.5s to communicate deep processing
+      const elapsed = Date.now() - evalStart;
+      const MIN_THINKING_MS = 1500;
+      if (elapsed < MIN_THINKING_MS) {
+        await new Promise(r => setTimeout(r, MIN_THINKING_MS - elapsed));
+      }
       const messageWithFeedback = { ...userMessage, metadata: { feedback } };
       const newQA = interviewSession.questionsAnswered + 1;
       const newScore = Math.round((interviewSession.overallScore * interviewSession.questionsAnswered + feedback.score) / newQA);
@@ -413,7 +442,7 @@ const Index: React.FC = () => {
               </div>
               <InteractiveCompass />
               {loadingError && <ErrorMessage message={loadingError} />}
-              <button onClick={() => setCurrentStep(AppState.QUIZ)} className="px-8 py-4 md:px-16 md:py-8 bg-foreground text-background font-heading font-black text-xl md:text-3xl uppercase brutalist-button transition-all hover:scale-105">
+              <button onClick={handleStartClick} className="px-8 py-4 md:px-16 md:py-8 bg-foreground text-background font-heading font-black text-xl md:text-3xl uppercase brutalist-button transition-all hover:scale-105">
                 {TRANSLATIONS.common.start} →
               </button>
               <AnimatedUsageCounter />
@@ -451,8 +480,15 @@ const Index: React.FC = () => {
         </AnimatePresence>
       </main>
 
-      <CareerAssistant isOpen={isChatOpen} onToggle={() => setIsChatOpen(!isChatOpen)} session={chatSession} onSessionUpdate={setChatSession} careerContext={prediction?.primaryCareer} weakAreas={interviewSession?.weakAreas} />
+      {CHAT_ENABLED && (
+        <CareerAssistant isOpen={isChatOpen} onToggle={() => setIsChatOpen(!isChatOpen)} session={chatSession} onSessionUpdate={setChatSession} careerContext={prediction?.primaryCareer} weakAreas={interviewSession?.weakAreas} />
+      )}
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      <PrivacyGate
+        isOpen={isPrivacyGateOpen}
+        onAgree={handlePrivacyAgree}
+        onCancel={() => setIsPrivacyGateOpen(false)}
+      />
     </div>
   );
 };
