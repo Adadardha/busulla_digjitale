@@ -564,7 +564,9 @@ export const getHint = async (question: string, career: string): Promise<string>
   }
 };
 
-// Career Chat Assistant
+// Career Chat Assistant — via Lovable Cloud edge function (no client key needed)
+
+import { supabase } from '../integrations/supabase/client';
 
 export const getCareerAssistantResponse = async (
   message: string,
@@ -575,45 +577,41 @@ export const getCareerAssistantResponse = async (
     weakAreas?: string[];
   },
 ): Promise<string> => {
-  if (!GEMINI_API_KEY) {
-    return 'Shërbimi AI nuk është konfiguruar. Konfiguro VITE_GEMINI_API_KEY për të aktivizuar asistentin.';
-  }
+  try {
+    const recentHistory = chatHistory.slice(-8).map(m => ({
+      role: m.role,
+      content: m.content,
+    }));
 
-  return withRetry(async () => {
-    const recentHistory = chatHistory.slice(-6);
-    const historyContext = recentHistory
-      .map(m => `${m.role === 'user' ? 'Përdoruesi' : 'Busulla'}: ${m.content}`)
-      .join('\n');
+    const { data, error } = await supabase.functions.invoke('career-chat', {
+      body: {
+        message,
+        history: recentHistory,
+        careerPath: userContext?.careerPath,
+        weakAreas: userContext?.weakAreas,
+      },
+    });
 
-    const contextParts: string[] = [];
-    if (userContext?.careerPath) contextParts.push(`Karriera e rekomanduar: ${userContext.careerPath}`);
-    if (userContext?.weakAreas?.length) contextParts.push(`Fusha për përmirësim: ${userContext.weakAreas.join(', ')}`);
-
-    const prompt = `Ti je "Busulla", një këshilltar karriere miqësor dhe profesional për nxënësit e gjimnazit në Shqipëri.
-
-RREGULLAT E TUA:
-- GJITHMONË përgjigju në shqip
-- Qëndro i fokusuar në tema karriere, arsimi, dhe zhvillimi profesional
-- Ji i ngrohtë, inkurajues, dhe praktik
-- Jep këshilla konkrete dhe të zbatueshme për kontekstin shqiptar
-- Nëse pyetja nuk ka lidhje me karrierën, thuaj me mirësjellje që je i specializuar vetëm për karrierë
-- MOS përdor emoji në asnjë rast
-
-KONTEKSTI I PËRDORUESIT:
-${contextParts.length > 0 ? contextParts.join('\n') : 'Asnjë kontekst specifik'}
-
-HISTORIA E BISEDËS:
-${historyContext || 'Bisedë e re'}
-
-Përdoruesi: ${message}
-
-Busulla:`;
-
-    try {
-      const text = await callGemini(prompt);
-      return text || 'Faleminderit për pyetjen! Si këshilltar karriere, jam këtu për të ndihmuar me orientimin profesional. Mund të pyesësh për karriera, universitete, ose përgatitjen për tregun e punës në Shqipëri.';
-    } catch {
-      return 'Faleminderit për pyetjen! Për momentin nuk mund të lidhem me shërbimin AI. Megjithatë, mund të përdorësh kuizin e karrierës për të zbuluar rrugën tënde, ose intervistën simulate për tu praktikuar.';
+    if (error) {
+      console.error('[Busulla] chat function error:', error);
+      throw error;
     }
-  });
+
+    if (data?.error === 'rate_limit') {
+      return 'Kërkesat po vijnë shumë shpejt. Prit pak sekonda dhe provo përsëri.';
+    }
+    if (data?.error === 'payment_required') {
+      return 'Shërbimi AI ka arritur limitin ditor. Provo më vonë.';
+    }
+
+    const content = (data?.content || '').toString().trim();
+    if (!content) {
+      return 'Faleminderit për pyetjen! Si këshilltar karriere, jam këtu për të ndihmuar me orientimin profesional. Mund të pyesësh për karriera, universitete, ose përgatitjen për tregun e punës në Shqipëri.';
+    }
+    return content;
+  } catch (err) {
+    console.error('[Busulla] chat error:', err);
+    return 'Për momentin lidhja me asistentin nuk është e mundur. Provo përsëri pas pak sekondash — kuizi dhe intervista simulate janë gjithashtu në dispozicion.';
+  }
 };
+
