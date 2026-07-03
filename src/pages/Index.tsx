@@ -26,7 +26,7 @@ const PRIVACY_CONSENT_KEY = 'busulla-privacy-consent';
 const MAX_QUESTIONS = 7;
 const USAGE_KEY = 'busulla-total-users';
 const USAGE_BASELINE = 47;
-const CHAT_ENABLED = Boolean(import.meta.env.VITE_GEMINI_API_KEY);
+const CHAT_ENABLED = true;
 
 // Interactive compass that follows mouse
 const InteractiveCompass: React.FC<{ isRevealing?: boolean }> = ({ isRevealing }) => {
