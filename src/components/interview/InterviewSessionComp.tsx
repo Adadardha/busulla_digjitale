@@ -178,7 +178,7 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
             onChange={e => onInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={TRANSLATIONS.interviewSession.chatPlaceholder}
-            className="w-full bg-transparent border-2 border-border p-4 min-h-[100px] focus:border-foreground outline-none resize-none text-sm md:text-base"
+            className="w-full bg-transparent border-2 border-border p-4 min-h-[100px] focus:border-foreground outline-none resize-none text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isGeneratingQuestion || isEvaluating}
           />
           <div className="flex flex-col md:flex-row gap-3">
