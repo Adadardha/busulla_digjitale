@@ -312,20 +312,24 @@ export const evaluateAnswerWithFeedback = async (
   }
 
   const attempt = async (): Promise<InterviewFeedback> => {
-    const prompt = `Si intervistues ekspert për ${career}, vlerëso këtë përgjigje me rigorozitet.
+    const prompt = `Ti je një intervistues rigoroz dhe këshilltar karriere ekspert për pozicionin ${career}. Vlerëso përgjigjen si një evaluator strikt, jo si një gjenerator gjenerik teksti.
 
 Pyetja: ${question}
-Përgjigjja e kandidatit: ${answer}
+Përgjigjja e kandidatit: "${answer}"
 Lloji i intervistës: ${mode}
 Vështirësia: ${difficulty}
 
-RREGULLAT E VLERËSIMIT (NDJEK STRIKT):
-- Përgjigje me 1-2 fjalë ose bosh: score 0-10
-- Përgjigje e shkurtër pa shembuj: score 10-30
-- Përgjigje mesatare me pak detaje: score 30-50
-- Përgjigje e mirë me shembuj: score 50-70
-- Përgjigje e detajuar me analitikë: score 70-90
-- Përgjigje e shkëlqyer, eksperte: score 90-100
+RREGULLA STRIKTE VLERËSIMI (NDJEK PA PËRJASHTIM):
+1. NËSE përgjigjja është BOSH, "nuk e di", "s'e di", "se di", "skam ide", "spo di", "nuk kam ide", ose çdo variant i tillë — score MUND TË JETË VETËM 0. Në "strengths" shkruaj: "Asnjë - kandidati nuk ka ofruar përgjigje." Në "improvements" shkruaj: "Në një intervistë reale, të thuash 'nuk e di' pa u përpjekur është e papranueshme. Edhe pa njohuri të plota, tregon procesin e të menduarit, bëj hipoteza, ose kërko sqarim." Në "detailedFeedback" shpjego qartë se një jo-përgjigje nuk mund të vlerësohet dhe këshillo si ta strukturojë kandidati një përgjigje edhe kur nuk është i sigurt.
+2. NËSE përgjigjja është irelevante ose nuk lidhet fare me pyetjen: score 0-10.
+3. NËSE përgjigjja është 1-2 fjalë (por përpiqet të jetë përgjigje): score 5-15.
+4. Përgjigje e shkurtër, sipërfaqësore, pa shembuj: score 15-35.
+5. Përgjigje mesatare me pak detaje: score 35-55.
+6. Përgjigje e mirë me shembuj konkretë: score 55-72.
+7. Përgjigje e detajuar me analizë të thellë: score 72-88.
+8. Përgjigje e shkëlqyer, eksperte, me shembuj konkretë dhe reflektim: score 88-100.
+
+MOS bëj kompliment nëse nuk meriton. MOS thuaj "kandidati u përpoq" nëse kandidati NUK u përpoq.
 
 You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.
 
@@ -333,7 +337,7 @@ You MUST return valid JSON only. No markdown, no explanation, no code fences, no
   "score": <number 0-100 based on rules above>,
   "strengths": ["pika e fortë 1", "pika e fortë 2"],
   "improvements": ["përmirësim 1", "përmirësim 2"],
-  "detailedFeedback": "Feedback i detajuar në shqip",
+  "detailedFeedback": "Feedback i detajuar në shqip, i drejtpërdrejtë dhe konstruktiv",
   "technicalAccuracy": <number 0-100>,
   "communication": <number 0-100>,
   "problemSolving": <number 0-100>
@@ -364,17 +368,50 @@ You MUST return valid JSON only. No markdown, no explanation, no code fences, no
 };
 
 function estimateScoreFromAnswer(answer: string): InterviewFeedback {
-  const wordCount = answer.trim().split(/\s+/).length;
+  const trimmed = answer.trim().toLowerCase();
+  const nonAnswerPatterns = [
+    /^s'?e\s*di\.?$/i,
+    /^se\s*di\.?$/i,
+    /^spo\s*di\.?$/i,
+    /^nuk\s*e\s*di\.?$/i,
+    /^s'?kam\s*ide\.?$/i,
+    /^skam\s*ide\.?$/i,
+    /^nuk\s*kam\s*ide\.?$/i,
+    /^i\s*don'?t\s*know\.?$/i,
+    /^idk\.?$/i,
+    /^no\s*idea\.?$/i,
+    /^-+$/,
+    /^\.+$/,
+    /^\?+$/,
+  ];
+  const isNonAnswer = trimmed.length === 0 || nonAnswerPatterns.some(p => p.test(trimmed));
+
+  if (isNonAnswer) {
+    return {
+      score: 0,
+      strengths: ['Asnjë - kandidati nuk ka ofruar përgjigje.'],
+      improvements: [
+        'Të thuash "nuk e di" pa u përpjekur është e papranueshme në intervistë.',
+        'Edhe pa njohuri të plota, trego procesin e të menduarit ose bëj hipoteza.',
+      ],
+      detailedFeedback: 'Një jo-përgjigje nuk mund të vlerësohet pozitivisht. Në një intervistë reale, kur nuk je i sigurt, provoni: 1) të parafrazoni pyetjen për të fituar kohë, 2) të ndani atë që dini nga ajo që nuk dini, 3) të bëni hipoteza të bazuara në logjikë. Heshtja ose "nuk e di" e mbyllin bisedën.',
+      technicalAccuracy: 0,
+      communication: 0,
+      problemSolving: 0,
+    };
+  }
+
+  const wordCount = trimmed.split(/\s+/).length;
   let score: number;
-  if (wordCount <= 2) score = 5;
-  else if (wordCount <= 10) score = 20;
+  if (wordCount <= 2) score = 8;
+  else if (wordCount <= 10) score = 22;
   else if (wordCount <= 30) score = 45;
   else if (wordCount <= 60) score = 65;
   else score = 78;
 
   return {
     score,
-    strengths: wordCount > 10 ? ['Përgjigjja ka përmbajtje relevante'] : ['Kandidati u përpoq të përgjigjej'],
+    strengths: wordCount > 10 ? ['Përgjigjja ka përmbajtje relevante'] : ['Kandidati provoi të përgjigjej me pak fjalë'],
     improvements: wordCount <= 10
       ? ['Shto shumë më shumë detaje dhe shembuj konkretë', 'Përgjigjja ishte shumë e shkurtër']
       : ['Mund të shtosh më shumë shembuj praktikë'],
