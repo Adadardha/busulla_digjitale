@@ -193,7 +193,8 @@ const InteractiveCompass: React.FC<{ isRevealing?: boolean }> = ({ isRevealing }
 };
 
 const AnimatedUsageCounter: React.FC = () => {
-  const target = parseInt(localStorage.getItem(USAGE_KEY) || '47', 10);
+  const stored = parseInt(localStorage.getItem(USAGE_KEY) || String(USAGE_BASELINE), 10);
+  const target = Math.max(stored, USAGE_BASELINE);
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -216,7 +217,7 @@ const AnimatedUsageCounter: React.FC = () => {
 
   return (
     <p className="text-sm text-muted-foreground">
-      {count}+ studente kane perdorur Bullen
+      {count}+ studentë kanë përdorur Busullën
     </p>
   );
 };
@@ -238,6 +239,7 @@ const Index: React.FC = () => {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isPrivacyGateOpen, setIsPrivacyGateOpen] = useState(false);
   const [chatSession, setChatSession] = useState<ChatSession>(() => {
     try {
       const saved = localStorage.getItem(CHAT_SESSION_KEY);
@@ -249,6 +251,22 @@ const Index: React.FC = () => {
   useEffect(() => {
     try { localStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(chatSession)); } catch {}
   }, [chatSession]);
+
+  const handleStartClick = () => {
+    // Show privacy gate on first run only
+    const hasConsented = localStorage.getItem(PRIVACY_CONSENT_KEY) === 'true';
+    if (hasConsented) {
+      setCurrentStep(AppState.QUIZ);
+    } else {
+      setIsPrivacyGateOpen(true);
+    }
+  };
+
+  const handlePrivacyAgree = () => {
+    localStorage.setItem(PRIVACY_CONSENT_KEY, 'true');
+    setIsPrivacyGateOpen(false);
+    setCurrentStep(AppState.QUIZ);
+  };
 
   const processResults = async (finalAnswers: QuizAnswer[]) => {
     setCurrentStep(AppState.ANALYZING);
