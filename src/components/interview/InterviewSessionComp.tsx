@@ -211,4 +211,13 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
   );
 };
 
+const SkeletonMetric: React.FC<{ label: string }> = ({ label }) => (
+  <div className="space-y-1">
+    <div className="h-2 bg-foreground/10 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/25 to-transparent animate-[shimmer_1.5s_infinite]" />
+    </div>
+    <p className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60">{label}</p>
+  </div>
+);
+
 export default InterviewSessionComponent;
