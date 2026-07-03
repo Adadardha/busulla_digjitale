@@ -104,24 +104,106 @@
     transform: translate(3px, 3px);
   }
 
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 2px;
+  .custom-scrollbar::-webkit-scrollbar { width: 2px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: hsl(var(--foreground) / 0.3); }
+
+
+
+  /* Aurora / cosmic background for the landing hero */
+  .aurora-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
   }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+  .aurora-bg::before,
+  .aurora-bg::after {
+    content: '';
+    position: absolute;
+    width: 70vmax;
+    height: 70vmax;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.35;
+    mix-blend-mode: screen;
+    animation: aurora-float 22s ease-in-out infinite alternate;
   }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--foreground) / 0.3);
+  .aurora-bg::before {
+    background: radial-gradient(circle at 30% 30%, hsl(190 90% 55% / 0.9), transparent 60%);
+    top: -20vmax;
+    left: -15vmax;
+  }
+  .aurora-bg::after {
+    background: radial-gradient(circle at 70% 70%, hsl(280 80% 60% / 0.75), transparent 60%);
+    bottom: -25vmax;
+    right: -20vmax;
+    animation-delay: -8s;
+  }
+
+  .aurora-orb {
+    position: absolute;
+    width: 45vmax;
+    height: 45vmax;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.22;
+    background: radial-gradient(circle, hsl(45 95% 55%), transparent 65%);
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: aurora-float 18s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+
+  .headline-gradient {
+    background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 60%) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .grain-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: radial-gradient(hsl(0 0% 100% / 0.9) 1px, transparent 1px);
+    background-size: 3px 3px;
+  }
+
+  .glow-cta {
+    box-shadow:
+      0 0 0 1px hsl(0 0% 100% / 0.1),
+      0 20px 60px -20px hsl(190 90% 55% / 0.55),
+      0 30px 80px -30px hsl(280 80% 60% / 0.4);
+  }
+  .glow-cta:hover {
+    box-shadow:
+      0 0 0 1px hsl(0 0% 100% / 0.2),
+      0 25px 80px -20px hsl(190 90% 55% / 0.7),
+      0 35px 100px -30px hsl(280 80% 60% / 0.5);
   }
 }
 
+@keyframes aurora-float {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(4vmax, -3vmax) scale(1.08); }
+  100% { transform: translate(-3vmax, 4vmax) scale(0.95); }
+}
+
 @keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 30px hsl(190 90% 55% / 0.4), 0 0 60px hsl(280 80% 60% / 0.25); }
+  50%      { box-shadow: 0 0 50px hsl(190 90% 55% / 0.7), 0 0 90px hsl(280 80% 60% / 0.45); }
 }
 
 ::-webkit-scrollbar {
@@ -133,3 +215,4 @@
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--foreground) / 0.3);
 }
+

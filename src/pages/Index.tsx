@@ -26,7 +26,7 @@ const PRIVACY_CONSENT_KEY = 'busulla-privacy-consent';
 const MAX_QUESTIONS = 7;
 const USAGE_KEY = 'busulla-total-users';
 const USAGE_BASELINE = 47;
-const CHAT_ENABLED = Boolean(import.meta.env.VITE_GEMINI_API_KEY);
+const CHAT_ENABLED = true;
 
 // Interactive compass that follows mouse
 const InteractiveCompass: React.FC<{ isRevealing?: boolean }> = ({ isRevealing }) => {
@@ -429,9 +429,25 @@ const Index: React.FC = () => {
         <AnimatePresence mode="wait">
           {currentStep === AppState.LANDING && (
             <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl w-full text-center space-y-8 md:space-y-12 relative z-10">
+              <div className="aurora-bg" aria-hidden="true">
+                <div className="aurora-orb" />
+              </div>
+              <div className="grain-overlay" aria-hidden="true" />
+
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.6 }}
+                className="relative z-10 inline-flex items-center gap-2 border border-border/60 bg-background/40 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                Orientim karriere · i mundësuar nga AI
+              </motion.div>
+
               <ASCIIHeader />
-              <div className="space-y-4 md:space-y-6">
-                <h1 className="text-4xl md:text-7xl lg:text-9xl font-heading font-black uppercase leading-[0.85] tracking-tighter">
+
+              <div className="space-y-4 md:space-y-6 relative z-10">
+                <h1 className="text-4xl md:text-7xl lg:text-9xl font-heading font-black uppercase leading-[0.85] tracking-tighter headline-gradient">
                   {TRANSLATIONS.landing.title.split(' ').map((word, j) => (
                     <span key={j} className="block hover:italic transition-all">{word}</span>
                   ))}
@@ -440,15 +456,36 @@ const Index: React.FC = () => {
                   {TRANSLATIONS.landing.subtitle}
                 </p>
               </div>
-              <InteractiveCompass />
+
+              <div className="relative z-10">
+                <InteractiveCompass />
+              </div>
+
               {loadingError && <ErrorMessage message={loadingError} />}
-              <button onClick={handleStartClick} className="px-8 py-4 md:px-16 md:py-8 bg-foreground text-background font-heading font-black text-xl md:text-3xl uppercase brutalist-button transition-all hover:scale-105">
+
+              <motion.button
+                onClick={handleStartClick}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="relative z-10 px-8 py-4 md:px-16 md:py-8 bg-foreground text-background font-heading font-black text-xl md:text-3xl uppercase brutalist-button glow-cta transition-all"
+              >
                 {TRANSLATIONS.common.start} →
-              </button>
-              <AnimatedUsageCounter />
+              </motion.button>
+
+              <div className="relative z-10 flex flex-col items-center gap-3">
+                <AnimatedUsageCounter />
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground/80">
+                  <span>7 pyetje adaptive</span>
+                  <span className="w-1 h-1 rounded-full bg-border" />
+                  <span>Intervista simulate</span>
+                  <span className="w-1 h-1 rounded-full bg-border" />
+                  <span>Asistent AI 24/7</span>
+                </div>
+              </div>
               <UsageStatsBanner />
             </motion.div>
           )}
+
 
           {currentStep === AppState.QUIZ && (
             <Quiz key="quiz" onComplete={processResults} />
