@@ -278,8 +278,8 @@ const Index: React.FC = () => {
       const result = await predictCareer(finalAnswers);
       setPrediction(result);
       recordQuizCompletion(result.primaryCareer);
-      const current = parseInt(localStorage.getItem(USAGE_KEY) || '47', 10);
-      localStorage.setItem(USAGE_KEY, String(current + 1));
+      const current = parseInt(localStorage.getItem(USAGE_KEY) || String(USAGE_BASELINE), 10);
+      localStorage.setItem(USAGE_KEY, String(Math.max(current, USAGE_BASELINE) + 1));
       setCurrentStep(AppState.RESULTS);
     } catch (error) {
       console.error(error);
