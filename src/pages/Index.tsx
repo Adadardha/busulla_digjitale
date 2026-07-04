@@ -304,6 +304,7 @@ const Index: React.FC = () => {
       messages: [], currentDifficulty: interviewDifficulty, overallScore: 0,
       weakAreas: [], strongAreas: [], startTime: Date.now(), isComplete: false,
       questionsAnswered: 0, hintsUsed: 0, maxHints: 3,
+      neurodivergent,
     };
     setInterviewSession(newSession);
     setCurrentStep(AppState.INTERVIEW_SESSION);
@@ -311,7 +312,7 @@ const Index: React.FC = () => {
     setInterviewReport(null);
     setIsGeneratingQuestion(true);
     try {
-      const result = await generateDynamicQuestion(prediction.primaryCareer, interviewMode, interviewDifficulty, []);
+      const result = await generateDynamicQuestion(prediction.primaryCareer, interviewMode, interviewDifficulty, [], [], neurodivergent);
       setInterviewSession(prev => prev ? { ...prev, messages: [...prev.messages, {
         role: 'assistant' as const, content: result.question, timestamp: Date.now(),
         metadata: { questionType: result.type, difficulty: interviewDifficulty },
@@ -321,7 +322,7 @@ const Index: React.FC = () => {
         role: 'assistant' as const, content: 'Na trego për veten tënde dhe pse dëshiron këtë pozicion.', timestamp: Date.now(),
       }] } : prev);
     } finally { setIsGeneratingQuestion(false); }
-  }, [prediction, interviewMode, interviewDifficulty]);
+  }, [prediction, interviewMode, interviewDifficulty, neurodivergent]);
 
   const submitInterviewAnswer = useCallback(async () => {
     if (!interviewSession || !interviewInput.trim() || isEvaluating) return;
@@ -330,17 +331,15 @@ const Index: React.FC = () => {
     setInterviewSession(prev => prev ? { ...prev, messages: updatedMessages } : prev);
     setInterviewInput('');
     setIsEvaluating(true);
-    const evalStart = Date.now();
     try {
       const lastQuestion = [...interviewSession.messages].reverse().find(m => m.role === 'assistant');
       if (!lastQuestion) return;
-      const feedback = await evaluateAnswerWithFeedback(interviewSession.career, lastQuestion.content, interviewInput, interviewSession.mode, interviewSession.currentDifficulty);
-      // Ensure the AI-thinking state is visible for at least 1.5s to communicate deep processing
-      const elapsed = Date.now() - evalStart;
-      const MIN_THINKING_MS = 1500;
-      if (elapsed < MIN_THINKING_MS) {
-        await new Promise(r => setTimeout(r, MIN_THINKING_MS - elapsed));
-      }
+      // Loading state is bound to the real async fetch promise below — no hardcoded setTimeouts.
+      const feedback = await evaluateAnswerWithFeedback(
+        interviewSession.career, lastQuestion.content, interviewInput,
+        interviewSession.mode, interviewSession.currentDifficulty,
+        interviewSession.neurodivergent,
+      );
       const messageWithFeedback = { ...userMessage, metadata: { feedback } };
       const newQA = interviewSession.questionsAnswered + 1;
       const newScore = Math.round((interviewSession.overallScore * interviewSession.questionsAnswered + feedback.score) / newQA);
@@ -355,7 +354,10 @@ const Index: React.FC = () => {
       });
       if (newQA < MAX_QUESTIONS) {
         setIsGeneratingQuestion(true);
-        const nextQ = await generateDynamicQuestion(interviewSession.career, interviewSession.mode, nextDifficulty, [...updatedMessages, messageWithFeedback], newWeak);
+        const nextQ = await generateDynamicQuestion(
+          interviewSession.career, interviewSession.mode, nextDifficulty,
+          [...updatedMessages, messageWithFeedback], newWeak, interviewSession.neurodivergent,
+        );
         setInterviewSession(prev => prev ? { ...prev, messages: [...prev.messages, {
           role: 'assistant' as const, content: nextQ.question, timestamp: Date.now(),
           metadata: { questionType: nextQ.type, difficulty: nextDifficulty },
