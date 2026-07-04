@@ -280,4 +280,29 @@ const RoadmapSection: React.FC<{
   </div>
 );
 
+const TrackCard: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  items: string[];
+}> = ({ icon, title, subtitle, items }) => (
+  <div className="p-4 md:p-5 glass-card border border-accent/20 h-full">
+    <div className="flex items-start gap-2.5 mb-3">
+      <span className="mt-0.5 text-accent shrink-0">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-sm md:text-base font-bold intel-text-gradient leading-tight">{title}</p>
+        <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+      </div>
+    </div>
+    <ul className="space-y-2">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-2 text-xs md:text-sm">
+          <span className="text-accent font-mono text-[10px] mt-1 shrink-0">◆</span>
+          <span className="leading-relaxed">{item}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
 export default Results;
