@@ -83,9 +83,8 @@ const CareerAssistant: React.FC<CareerAssistantProps> = ({
     onSessionUpdate({ messages: [], context: { userPreferences: {} }, lastUpdated: Date.now() });
   };
 
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit' });
-  };
+  // Note: chat bubbles intentionally omit timestamps to avoid leaking raw system data.
+
 
   return (
     <>
