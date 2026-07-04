@@ -205,24 +205,49 @@ Data: ${new Date().toLocaleDateString('sq-AL')}
           </div>
         </div>
 
+        {/* Ideal Work Environment — Neurodiversity Mode */}
+        {report.neurodivergent && report.idealWorkEnvironment && report.idealWorkEnvironment.length > 0 && (
+          <div className="mb-8 p-6 glass-card border border-accent/40">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-accent/20 border border-accent/40 flex items-center justify-center text-accent">
+                <Home className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold uppercase tracking-wider intel-text-gradient">Mjedisi Ideal i Punës</h3>
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                  <Brain className="w-3 h-3" /> Bazuar në Modalitetin Gjithëpërfshirës
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {report.idealWorkEnvironment.map((env, i) => (
+                <div key={i} className="p-3 rounded-lg bg-background/40 border border-border flex items-start gap-2">
+                  <span className="text-accent text-[10px] font-mono mt-1">◆</span>
+                  <span className="text-sm leading-relaxed">{env}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Recommendations */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="p-6 brutalist-border bg-foreground/5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2 p-6 glass-card">
             <h3 className="text-lg font-bold mb-4 uppercase tracking-wider">{TRANSLATIONS.interviewReport.recommendations}</h3>
             <ul className="space-y-2">
               {report.recommendations.map((rec, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                  <span className="text-sm">{rec}</span>
+                  <span className="text-sm break-words">{rec}</span>
                 </li>
               ))}
             </ul>
           </div>
-          <div className="p-6 brutalist-border bg-foreground/5">
+          <div className="p-6 glass-card">
             <h3 className="text-lg font-bold mb-4 uppercase tracking-wider">{TRANSLATIONS.interviewReport.practiceSuggestions}</h3>
             <div className="flex flex-wrap gap-2">
               {report.practiceSuggestions.map((s, i) => (
-                <span key={i} className="px-3 py-1 border border-border text-sm">{s}</span>
+                <span key={i} className="px-3 py-1 rounded-full border border-accent/30 bg-accent/5 text-xs">{s}</span>
               ))}
             </div>
           </div>
