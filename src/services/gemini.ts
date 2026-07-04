@@ -226,18 +226,63 @@ function getLocalRoadmap(career: string): CareerRoadmap {
     jobDemand: 'Kërkesë e mirë në tregun shqiptar',
   };
 }
+
+/** Local fallback for the three democratized economic tracks. */
+function getLocalTracks(career: string): {
+  educationTrack: string[];
+  localMarketTrack: string[];
+  practicalSkillsTrack: string[];
+} {
+  const c = career.toLowerCase();
+  const isTech = /software|shkenc|data|inxhinier|ux|ui|dizajn/.test(c);
+  const isBiz = /menaxher|marketing|sipërmarrës|ekonom/.test(c);
+  const isHealth = /mjek|psikolog|shëndet/.test(c);
+
+  return {
+    educationTrack: [
+      'FSHN, Politeknik, UAMD — universitete publike me tarifa të ulëta',
+      'Kurse falas online: Coursera Financial Aid, edX audit, Google Career Certificates',
+      isTech ? 'Certifikime Microsoft Learn / freeCodeCamp / Meta Front-End (falas)'
+        : isHealth ? 'ProCredit Academy dhe kurse të Ministrisë së Shëndetësisë'
+        : 'Certifikime AKAFP dhe kurse profesionale të AKPA',
+      'Programe Erasmus+ dhe shkëmbime studentore për akses ndërkombëtar',
+    ],
+    localMarketTrack: [
+      isTech ? 'Sektori tech në Tiranë, Durrës dhe Shkodër — Cardo AI, Ikub, Balfin Tech'
+        : isBiz ? 'Sektor privat në rritje — startup-e në Tiranë, tregtia rajonale në Vlorë/Korçë'
+        : isHealth ? 'Qendra shëndetësore rajonale + spitalet universitare në qytetet kryesore'
+        : 'Sektori publik + OJF-të rajonale (Fier, Elbasan, Kukës)',
+      'Punë remote për kompani të BE-së dhe SHBA-së — akses i barabartë nga çdo qytet',
+      'Programe praktike me AmCham Albania, Junior Achievement, Protik Center',
+      'Rrjeti i inkubatorëve: Uplift, Innospace, Yunus Social Business Balkans',
+    ],
+    practicalSkillsTrack: [
+      isTech ? 'CodeWeek Albania — hackathon-e vjetore dhe workshop-e falas'
+        : 'Google Digital Garage — trajnime falas për aftësi digjitale',
+      'Coursera dhe Khan Academy Shqip — kurse me subtitra në gjuhën shqipe',
+      'Bootcamp-e komunitare: Girls Code Albania, Open Labs Hackerspace',
+      'Portofoli personal në GitHub/Behance për të treguar punën konkretisht',
+      'Anglishtja në nivel B2+ — obligatore për tregun global remote',
+    ],
+  };
+}
+
 export const generateCareerRoadmap = async (career: string): Promise<CareerRoadmap> => {
-  const fallback: CareerRoadmap = getLocalRoadmap(career);
+  const localTracks = getLocalTracks(career);
+  const fallback: CareerRoadmap = { ...getLocalRoadmap(career), ...localTracks };
 
   if (!GEMINI_API_KEY) return fallback;
 
-  const prompt = `Për karrierën "${career}" në Shqipëri, kthe VETËM JSON valid:
+  const prompt = `Për karrierën "${career}" në Shqipëri, kthe VETËM JSON valid me tri trajektore lokale që mbështesin akses demokratik jashtë Tiranës:
 {
   "subjects": ["5 lëndë gjimnazi relevante"],
-  "universities": ["3-5 universitete/fakultete shqiptare që ofrojnë këtë fushë"],
+  "universities": ["3-5 universitete/fakultete shqiptare"],
   "careerPath": ["5 hapa tipikë të karrierës në Shqipëri"],
-  "salaryRange": "diapazoni i pagës mujore në ALL për Shqipërinë",
-  "jobDemand": "përshkrim i shkurtër i kërkesës në tregun e punës shqiptar"
+  "salaryRange": "diapazoni i pagës mujore në ALL",
+  "jobDemand": "përshkrim i shkurtër i kërkesës",
+  "educationTrack": ["4 opsione falas/lokale: universitete publike, certifikime digjitale, kurse online falas"],
+  "localMarketTrack": ["4 lidhje konkrete me tregun shqiptar — kompani, sektorë rajonalë, praktika, remote"],
+  "practicalSkillsTrack": ["4-5 hapa vetë-studimi duke përdorur burime globale falas (CodeWeek, Coursera, bootcamp-e komunitare)"]
 }${STRICT_JSON_INSTRUCTION}`;
 
   try {
