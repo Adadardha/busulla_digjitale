@@ -380,18 +380,24 @@ export const evaluateAnswerWithFeedback = async (
   answer: string,
   mode: InterviewMode,
   difficulty: DifficultyLevel,
+  neurodivergent: boolean = false,
 ): Promise<InterviewFeedback> => {
   if (!GEMINI_API_KEY) {
     return estimateScoreFromAnswer(answer);
   }
 
   const attempt = async (): Promise<InterviewFeedback> => {
+    const neurodivergentAppendix = neurodivergent ? `
+
+MODALITETI GJITHËPËRFSHIRËS (NEURODIVERSITY SUPPORT MODE) — I AKTIVIZUAR:
+Fokuso vlerësimin te qëndrueshmëria arkitektonike dhe shprehja objektive e aftësive teknike/logjike, jo te kliçetë sjellorë ("passion", "team spirit", kontakti me sy). NUK duhet të penalizosh mungesën e gjuhës sociale-korporative. Vlerëso: qartësinë strukturore, saktësinë faktike, dhe zbatueshmërinë teknike. Nëse përgjigjja është e strukturuar sipas metodës STAR (Situata / Detyra / Veprimi / Rezultati), lëvdo strukturën.` : '';
+
     const prompt = `Ti je një intervistues rigoroz dhe këshilltar karriere ekspert për pozicionin ${career}. Vlerëso përgjigjen si një evaluator strikt, jo si një gjenerator gjenerik teksti.
 
 Pyetja: ${question}
 Përgjigjja e kandidatit: "${answer}"
 Lloji i intervistës: ${mode}
-Vështirësia: ${difficulty}
+Vështirësia: ${difficulty}${neurodivergentAppendix}
 
 RREGULLA STRIKTE VLERËSIMI (NDJEK PA PËRJASHTIM):
 1. NËSE përgjigjja është BOSH, "nuk e di", "s'e di", "se di", "skam ide", "spo di", "nuk kam ide", ose çdo variant i tillë — score MUND TË JETË VETËM 0. Në "strengths" shkruaj: "Asnjë - kandidati nuk ka ofruar përgjigje." Në "improvements" shkruaj: "Në një intervistë reale, të thuash 'nuk e di' pa u përpjekur është e papranueshme. Edhe pa njohuri të plota, tregon procesin e të menduarit, bëj hipoteza, ose kërko sqarim." Në "detailedFeedback" shpjego qartë se një jo-përgjigje nuk mund të vlerësohet dhe këshillo si ta strukturojë kandidati një përgjigje edhe kur nuk është i sigurt.
