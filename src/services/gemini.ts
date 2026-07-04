@@ -572,11 +572,19 @@ export const generateInterviewReport = async (
   const verdict = session.overallScore >= 70 ? 'hired' :
     session.overallScore >= 50 ? 'consider' : 'rejected';
 
+  const idealEnvDefaults = [
+    'Mjedis me pak stimuj sensorial (zhurmë, dritë e fortë) — hapësira fokusi ose remote',
+    'Komunikim asinkron (Slack, email, dokumentacion) mbi mbledhje ad-hoc',
+    'Detyra të përcaktuara qartë me kritere objektive suksesi',
+    'Ekipe të vogla teknike me kulturë të dokumentuar dhe procese të parashikueshme',
+  ];
+
   const fallbackReport = {
     summary: `Intervista përfundoi me rezultat ${session.overallScore}/100. ${verdict === 'hired' ? 'Kandidati tregon gatishmëri.' : verdict === 'consider' ? 'Ka potencial, por nevojiten përmirësime.' : 'Duhen më shumë përgatitje.'}`,
     recommendations: ['Praktikoni më shumë intervista', 'Thelloni njohuritë teknike', 'Përgatitni shembuj konkretë'],
     weakTopics: session.weakAreas.length > 0 ? session.weakAreas : ['Përgjigje më të detajuara'],
     practiceSuggestions: ['Intervista simulate', 'Studime rasti', 'Rishikim i literaturës profesionale'],
+    idealWorkEnvironment: session.neurodivergent ? idealEnvDefaults : undefined,
   };
 
   if (!GEMINI_API_KEY) {
@@ -585,8 +593,13 @@ export const generateInterviewReport = async (
       overallScore: session.overallScore, verdict, ...fallbackReport,
       categoryScores, answersReview: answers,
       duration: session.endTime ? session.endTime - session.startTime : 0,
+      neurodivergent: session.neurodivergent,
     };
   }
+
+  const neurodivergentBlock = session.neurodivergent ? `
+Studenti ka aktivizuar Modalitetin Gjithëpërfshirës (Neurodiversity). Fokuso rekomandimet te qëndrueshmëria arkitektonike, jo te kliçetë sjellorë.
+Shto edhe fushën "idealWorkEnvironment": 4 elementë të mjedisit ideal të punës (p.sh. fokus-heavy, sensory-friendly, asinkronë).` : '';
 
   const summaryPrompt = `Gjenero një raport përfundimtar për intervistën.
 
@@ -594,7 +607,7 @@ Pozicioni: ${session.career}
 Rezultati i përgjithshëm: ${session.overallScore}/100
 Vendimi: ${verdict === 'hired' ? 'Pranuar' : verdict === 'consider' ? 'Në konsideratë' : 'I refuzuar'}
 Fusha të dobëta: ${session.weakAreas.join(', ') || 'Asnjë'}
-Fusha të forta: ${session.strongAreas.join(', ') || 'Asnjë'}
+Fusha të forta: ${session.strongAreas.join(', ') || 'Asnjë'}${neurodivergentBlock}
 
 You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.
 
@@ -602,12 +615,12 @@ You MUST return valid JSON only. No markdown, no explanation, no code fences, no
   "summary": "Përmbledhje në 2-3 fjali në shqip",
   "recommendations": ["rekomandim 1", "rekomandim 2", "rekomandim 3"],
   "weakTopics": ["temë e dobët 1", "temë e dobët 2"],
-  "practiceSuggestions": ["sugjerim praktike 1", "sugjerim 2"]
+  "practiceSuggestions": ["sugjerim praktike 1", "sugjerim 2"]${session.neurodivergent ? ',\n  "idealWorkEnvironment": ["mjedis 1", "mjedis 2", "mjedis 3", "mjedis 4"]' : ''}
 }`;
 
   try {
     const text = await withRetry(async () => callGemini(summaryPrompt), 1, 1500);
-    const aiReport = safeParse(text, fallbackReport);
+    const aiReport = safeParse<any>(text, fallbackReport);
 
     return {
       sessionId: session.id, career: session.career, mode: session.mode,
@@ -618,6 +631,10 @@ You MUST return valid JSON only. No markdown, no explanation, no code fences, no
       weakTopics: aiReport.weakTopics?.length ? aiReport.weakTopics : fallbackReport.weakTopics,
       practiceSuggestions: aiReport.practiceSuggestions?.length ? aiReport.practiceSuggestions : fallbackReport.practiceSuggestions,
       duration: session.endTime ? session.endTime - session.startTime : 0,
+      neurodivergent: session.neurodivergent,
+      idealWorkEnvironment: session.neurodivergent
+        ? (aiReport.idealWorkEnvironment?.length ? aiReport.idealWorkEnvironment : idealEnvDefaults)
+        : undefined,
     };
   } catch {
     return {
