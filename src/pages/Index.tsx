@@ -231,6 +231,7 @@ const Index: React.FC = () => {
 
   const [interviewMode, setInterviewMode] = useState<InterviewMode>(InterviewMode.MIXED);
   const [interviewDifficulty, setInterviewDifficulty] = useState<DifficultyLevel>(DifficultyLevel.MEDIUM);
+  const [neurodivergent, setNeurodivergent] = useState<boolean>(false);
   const [interviewSession, setInterviewSession] = useState<InterviewSession | null>(null);
   const [interviewInput, setInterviewInput] = useState('');
   const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
