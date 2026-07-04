@@ -144,15 +144,51 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
               <RoadmapSection icon={<BookOpen className="w-4 h-4" />} title={TRANSLATIONS.results.roadmapSubjects} items={roadmap.subjects} />
               <RoadmapSection icon={<GraduationCap className="w-4 h-4" />} title={TRANSLATIONS.results.roadmapUniversities} items={roadmap.universities} />
               <RoadmapSection icon={<TrendingUp className="w-4 h-4" />} title={TRANSLATIONS.results.roadmapCareerPath} items={roadmap.careerPath} numbered />
+
+              {/* Three democratized local tracks — access beyond Tirana */}
+              {(roadmap.educationTrack || roadmap.localMarketTrack || roadmap.practicalSkillsTrack) && (
+                <div className="mt-6 pt-6 border-t border-border">
+                  <p className="text-xs md:text-sm uppercase tracking-widest text-accent mb-4 font-bold">
+                    Trajektoret Lokale · Akses Demokratik
+                  </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {roadmap.educationTrack && (
+                      <TrackCard
+                        icon={<GraduationCap className="w-4 h-4" />}
+                        title="Arsimi dhe Certifikimet"
+                        subtitle="Universitete publike + kurse falas"
+                        items={roadmap.educationTrack}
+                      />
+                    )}
+                    {roadmap.localMarketTrack && (
+                      <TrackCard
+                        icon={<TrendingUp className="w-4 h-4" />}
+                        title="Tregu Lokal i Punës"
+                        subtitle="Kompani dhe sektorë në Shqipëri"
+                        items={roadmap.localMarketTrack}
+                      />
+                    )}
+                    {roadmap.practicalSkillsTrack && (
+                      <TrackCard
+                        icon={<BookOpen className="w-4 h-4" />}
+                        title="Aftësi Praktike"
+                        subtitle="CodeWeek, Coursera, bootcamp-e"
+                        items={roadmap.practicalSkillsTrack}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 brutalist-border bg-foreground/5">
+                <div className="p-4 glass-card">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
                     <Banknote className="w-3.5 h-3.5" />
                     {TRANSLATIONS.results.roadmapSalary}
                   </p>
                   <p className="font-bold text-lg">{roadmap.salaryRange}</p>
                 </div>
-                <div className="p-4 brutalist-border bg-foreground/5">
+                <div className="p-4 glass-card">
                   <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
                     <BarChart3 className="w-3.5 h-3.5" />
                     {TRANSLATIONS.results.roadmapDemand}
@@ -238,6 +274,31 @@ const RoadmapSection: React.FC<{
             {numbered ? `${i + 1}.` : '--'}
           </span>
           <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+const TrackCard: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  items: string[];
+}> = ({ icon, title, subtitle, items }) => (
+  <div className="p-4 md:p-5 glass-card border border-accent/20 h-full">
+    <div className="flex items-start gap-2.5 mb-3">
+      <span className="mt-0.5 text-accent shrink-0">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-sm md:text-base font-bold intel-text-gradient leading-tight">{title}</p>
+        <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{subtitle}</p>
+      </div>
+    </div>
+    <ul className="space-y-2">
+      {items.map((item, i) => (
+        <li key={i} className="flex items-start gap-2 text-xs md:text-sm">
+          <span className="text-accent font-mono text-[10px] mt-1 shrink-0">◆</span>
+          <span className="leading-relaxed">{item}</span>
         </li>
       ))}
     </ul>

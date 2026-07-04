@@ -1,3 +1,26 @@
+/**
+ * Busulla Digjitale — AI Orchestration Layer
+ * =========================================================================
+ * Current cloud pathway: Google Gemini via @google/generative-ai + Lovable
+ * Cloud edge function (`career-chat`) for the assistant channel.
+ *
+ * INTEL OpenVINO Readiness — Edge Inference Pipeline (planned)
+ * -------------------------------------------------------------------------
+ * The model invocation pathways below are intentionally isolated behind
+ * `callGemini()` and `getCareerAssistantResponse()` so that a local edge
+ * inference runtime (Intel Distribution of OpenVINO Toolkit — e.g.
+ * `openvino.runtime.Core` or the OpenVINO GenAI `LLMPipeline` API) can be
+ * swapped in without touching UI or scoring logic. Deployment placeholders:
+ *
+ *   const OPENVINO_MODEL_PATH  = import.meta.env.VITE_OPENVINO_MODEL_PATH;
+ *   const OPENVINO_DEVICE      = import.meta.env.VITE_OPENVINO_DEVICE || "CPU"; // CPU | GPU | NPU
+ *   const OPENVINO_PRECISION   = "INT8"; // quantized for low-bandwidth Albanian classrooms
+ *
+ * When a local runtime is available, `callGemini()` should short-circuit to
+ * an OpenVINO pipeline stream; otherwise it falls back to the cloud call.
+ * This keeps the app usable on offline / low-bandwidth school hardware.
+ * =========================================================================
+ */
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   QuizAnswer,
@@ -203,18 +226,63 @@ function getLocalRoadmap(career: string): CareerRoadmap {
     jobDemand: 'Kërkesë e mirë në tregun shqiptar',
   };
 }
+
+/** Local fallback for the three democratized economic tracks. */
+function getLocalTracks(career: string): {
+  educationTrack: string[];
+  localMarketTrack: string[];
+  practicalSkillsTrack: string[];
+} {
+  const c = career.toLowerCase();
+  const isTech = /software|shkenc|data|inxhinier|ux|ui|dizajn/.test(c);
+  const isBiz = /menaxher|marketing|sipërmarrës|ekonom/.test(c);
+  const isHealth = /mjek|psikolog|shëndet/.test(c);
+
+  return {
+    educationTrack: [
+      'FSHN, Politeknik, UAMD — universitete publike me tarifa të ulëta',
+      'Kurse falas online: Coursera Financial Aid, edX audit, Google Career Certificates',
+      isTech ? 'Certifikime Microsoft Learn / freeCodeCamp / Meta Front-End (falas)'
+        : isHealth ? 'ProCredit Academy dhe kurse të Ministrisë së Shëndetësisë'
+        : 'Certifikime AKAFP dhe kurse profesionale të AKPA',
+      'Programe Erasmus+ dhe shkëmbime studentore për akses ndërkombëtar',
+    ],
+    localMarketTrack: [
+      isTech ? 'Sektori tech në Tiranë, Durrës dhe Shkodër — Cardo AI, Ikub, Balfin Tech'
+        : isBiz ? 'Sektor privat në rritje — startup-e në Tiranë, tregtia rajonale në Vlorë/Korçë'
+        : isHealth ? 'Qendra shëndetësore rajonale + spitalet universitare në qytetet kryesore'
+        : 'Sektori publik + OJF-të rajonale (Fier, Elbasan, Kukës)',
+      'Punë remote për kompani të BE-së dhe SHBA-së — akses i barabartë nga çdo qytet',
+      'Programe praktike me AmCham Albania, Junior Achievement, Protik Center',
+      'Rrjeti i inkubatorëve: Uplift, Innospace, Yunus Social Business Balkans',
+    ],
+    practicalSkillsTrack: [
+      isTech ? 'CodeWeek Albania — hackathon-e vjetore dhe workshop-e falas'
+        : 'Google Digital Garage — trajnime falas për aftësi digjitale',
+      'Coursera dhe Khan Academy Shqip — kurse me subtitra në gjuhën shqipe',
+      'Bootcamp-e komunitare: Girls Code Albania, Open Labs Hackerspace',
+      'Portofoli personal në GitHub/Behance për të treguar punën konkretisht',
+      'Anglishtja në nivel B2+ — obligatore për tregun global remote',
+    ],
+  };
+}
+
 export const generateCareerRoadmap = async (career: string): Promise<CareerRoadmap> => {
-  const fallback: CareerRoadmap = getLocalRoadmap(career);
+  const localTracks = getLocalTracks(career);
+  const fallback: CareerRoadmap = { ...getLocalRoadmap(career), ...localTracks };
 
   if (!GEMINI_API_KEY) return fallback;
 
-  const prompt = `Për karrierën "${career}" në Shqipëri, kthe VETËM JSON valid:
+  const prompt = `Për karrierën "${career}" në Shqipëri, kthe VETËM JSON valid me tri trajektore lokale që mbështesin akses demokratik jashtë Tiranës:
 {
   "subjects": ["5 lëndë gjimnazi relevante"],
-  "universities": ["3-5 universitete/fakultete shqiptare që ofrojnë këtë fushë"],
+  "universities": ["3-5 universitete/fakultete shqiptare"],
   "careerPath": ["5 hapa tipikë të karrierës në Shqipëri"],
-  "salaryRange": "diapazoni i pagës mujore në ALL për Shqipërinë",
-  "jobDemand": "përshkrim i shkurtër i kërkesës në tregun e punës shqiptar"
+  "salaryRange": "diapazoni i pagës mujore në ALL",
+  "jobDemand": "përshkrim i shkurtër i kërkesës",
+  "educationTrack": ["4 opsione falas/lokale: universitete publike, certifikime digjitale, kurse online falas"],
+  "localMarketTrack": ["4 lidhje konkrete me tregun shqiptar — kompani, sektorë rajonalë, praktika, remote"],
+  "practicalSkillsTrack": ["4-5 hapa vetë-studimi duke përdorur burime globale falas (CodeWeek, Coursera, bootcamp-e komunitare)"]
 }${STRICT_JSON_INSTRUCTION}`;
 
   try {
@@ -233,6 +301,7 @@ export const generateDynamicQuestion = async (
   difficulty: DifficultyLevel,
   history: InterviewMessage[],
   weakAreas: string[] = [],
+  neurodivergent: boolean = false,
 ): Promise<{ question: string; type: 'technical' | 'behavioral'; hints: string[] }> => {
   const fallback = getFallbackQuestion(career, mode);
 
@@ -255,11 +324,16 @@ export const generateDynamicQuestion = async (
       .map(m => m.content.substring(0, 100))
       .join(' | ');
 
+    const neurodivergentDirective = neurodivergent ? `
+
+MODALITETI GJITHËPËRFSHIRËS (NEURODIVERSITY SUPPORT MODE) — I AKTIVIZUAR:
+The student has enabled neurodiversity support mode. Strip all ambiguous corporate idioms or open-ended buzzword prompts from the interview script. Frame every scenario clearly and concretely, split complex assignments sequentially into clear structured sub-questions (numbered a, b, c), and prioritize concrete technical/logical focus areas over arbitrary social cues. Avoid metaphors like "sell yourself" or "biggest weakness" — replace with concrete task-based framings.` : '';
+
     const prompt = `Je intervistues ekspert për pozicionin: ${career}
 
 Lloji i intervistës: ${modeDescriptions[mode]}
 Niveli i vështirësisë: ${difficultyContext[difficulty]}
-${weakAreas.length > 0 ? `Fusha që duhen përmirësuar: ${weakAreas.join(', ')}` : ''}
+${weakAreas.length > 0 ? `Fusha që duhen përmirësuar: ${weakAreas.join(', ')}` : ''}${neurodivergentDirective}
 Përgjigjet e fundit të kandidatit: ${historySummary || 'Asnjë ende'}
 
 KTHE VETËM JSON VALID:
@@ -306,18 +380,24 @@ export const evaluateAnswerWithFeedback = async (
   answer: string,
   mode: InterviewMode,
   difficulty: DifficultyLevel,
+  neurodivergent: boolean = false,
 ): Promise<InterviewFeedback> => {
   if (!GEMINI_API_KEY) {
     return estimateScoreFromAnswer(answer);
   }
 
   const attempt = async (): Promise<InterviewFeedback> => {
+    const neurodivergentAppendix = neurodivergent ? `
+
+MODALITETI GJITHËPËRFSHIRËS (NEURODIVERSITY SUPPORT MODE) — I AKTIVIZUAR:
+Fokuso vlerësimin te qëndrueshmëria arkitektonike dhe shprehja objektive e aftësive teknike/logjike, jo te kliçetë sjellorë ("passion", "team spirit", kontakti me sy). NUK duhet të penalizosh mungesën e gjuhës sociale-korporative. Vlerëso: qartësinë strukturore, saktësinë faktike, dhe zbatueshmërinë teknike. Nëse përgjigjja është e strukturuar sipas metodës STAR (Situata / Detyra / Veprimi / Rezultati), lëvdo strukturën.` : '';
+
     const prompt = `Ti je një intervistues rigoroz dhe këshilltar karriere ekspert për pozicionin ${career}. Vlerëso përgjigjen si një evaluator strikt, jo si një gjenerator gjenerik teksti.
 
 Pyetja: ${question}
 Përgjigjja e kandidatit: "${answer}"
 Lloji i intervistës: ${mode}
-Vështirësia: ${difficulty}
+Vështirësia: ${difficulty}${neurodivergentAppendix}
 
 RREGULLA STRIKTE VLERËSIMI (NDJEK PA PËRJASHTIM):
 1. NËSE përgjigjja është BOSH, "nuk e di", "s'e di", "se di", "skam ide", "spo di", "nuk kam ide", ose çdo variant i tillë — score MUND TË JETË VETËM 0. Në "strengths" shkruaj: "Asnjë - kandidati nuk ka ofruar përgjigje." Në "improvements" shkruaj: "Në një intervistë reale, të thuash 'nuk e di' pa u përpjekur është e papranueshme. Edhe pa njohuri të plota, tregon procesin e të menduarit, bëj hipoteza, ose kërko sqarim." Në "detailedFeedback" shpjego qartë se një jo-përgjigje nuk mund të vlerësohet dhe këshillo si ta strukturojë kandidati një përgjigje edhe kur nuk është i sigurt.
@@ -492,11 +572,19 @@ export const generateInterviewReport = async (
   const verdict = session.overallScore >= 70 ? 'hired' :
     session.overallScore >= 50 ? 'consider' : 'rejected';
 
+  const idealEnvDefaults = [
+    'Mjedis me pak stimuj sensorial (zhurmë, dritë e fortë) — hapësira fokusi ose remote',
+    'Komunikim asinkron (Slack, email, dokumentacion) mbi mbledhje ad-hoc',
+    'Detyra të përcaktuara qartë me kritere objektive suksesi',
+    'Ekipe të vogla teknike me kulturë të dokumentuar dhe procese të parashikueshme',
+  ];
+
   const fallbackReport = {
     summary: `Intervista përfundoi me rezultat ${session.overallScore}/100. ${verdict === 'hired' ? 'Kandidati tregon gatishmëri.' : verdict === 'consider' ? 'Ka potencial, por nevojiten përmirësime.' : 'Duhen më shumë përgatitje.'}`,
     recommendations: ['Praktikoni më shumë intervista', 'Thelloni njohuritë teknike', 'Përgatitni shembuj konkretë'],
     weakTopics: session.weakAreas.length > 0 ? session.weakAreas : ['Përgjigje më të detajuara'],
     practiceSuggestions: ['Intervista simulate', 'Studime rasti', 'Rishikim i literaturës profesionale'],
+    idealWorkEnvironment: session.neurodivergent ? idealEnvDefaults : undefined,
   };
 
   if (!GEMINI_API_KEY) {
@@ -505,8 +593,13 @@ export const generateInterviewReport = async (
       overallScore: session.overallScore, verdict, ...fallbackReport,
       categoryScores, answersReview: answers,
       duration: session.endTime ? session.endTime - session.startTime : 0,
+      neurodivergent: session.neurodivergent,
     };
   }
+
+  const neurodivergentBlock = session.neurodivergent ? `
+Studenti ka aktivizuar Modalitetin Gjithëpërfshirës (Neurodiversity). Fokuso rekomandimet te qëndrueshmëria arkitektonike, jo te kliçetë sjellorë.
+Shto edhe fushën "idealWorkEnvironment": 4 elementë të mjedisit ideal të punës (p.sh. fokus-heavy, sensory-friendly, asinkronë).` : '';
 
   const summaryPrompt = `Gjenero një raport përfundimtar për intervistën.
 
@@ -514,7 +607,7 @@ Pozicioni: ${session.career}
 Rezultati i përgjithshëm: ${session.overallScore}/100
 Vendimi: ${verdict === 'hired' ? 'Pranuar' : verdict === 'consider' ? 'Në konsideratë' : 'I refuzuar'}
 Fusha të dobëta: ${session.weakAreas.join(', ') || 'Asnjë'}
-Fusha të forta: ${session.strongAreas.join(', ') || 'Asnjë'}
+Fusha të forta: ${session.strongAreas.join(', ') || 'Asnjë'}${neurodivergentBlock}
 
 You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.
 
@@ -522,12 +615,12 @@ You MUST return valid JSON only. No markdown, no explanation, no code fences, no
   "summary": "Përmbledhje në 2-3 fjali në shqip",
   "recommendations": ["rekomandim 1", "rekomandim 2", "rekomandim 3"],
   "weakTopics": ["temë e dobët 1", "temë e dobët 2"],
-  "practiceSuggestions": ["sugjerim praktike 1", "sugjerim 2"]
+  "practiceSuggestions": ["sugjerim praktike 1", "sugjerim 2"]${session.neurodivergent ? ',\n  "idealWorkEnvironment": ["mjedis 1", "mjedis 2", "mjedis 3", "mjedis 4"]' : ''}
 }`;
 
   try {
     const text = await withRetry(async () => callGemini(summaryPrompt), 1, 1500);
-    const aiReport = safeParse(text, fallbackReport);
+    const aiReport = safeParse<any>(text, fallbackReport);
 
     return {
       sessionId: session.id, career: session.career, mode: session.mode,
@@ -538,6 +631,10 @@ You MUST return valid JSON only. No markdown, no explanation, no code fences, no
       weakTopics: aiReport.weakTopics?.length ? aiReport.weakTopics : fallbackReport.weakTopics,
       practiceSuggestions: aiReport.practiceSuggestions?.length ? aiReport.practiceSuggestions : fallbackReport.practiceSuggestions,
       duration: session.endTime ? session.endTime - session.startTime : 0,
+      neurodivergent: session.neurodivergent,
+      idealWorkEnvironment: session.neurodivergent
+        ? (aiReport.idealWorkEnvironment?.length ? aiReport.idealWorkEnvironment : idealEnvDefaults)
+        : undefined,
     };
   } catch {
     return {
@@ -545,6 +642,7 @@ You MUST return valid JSON only. No markdown, no explanation, no code fences, no
       overallScore: session.overallScore, verdict, ...fallbackReport,
       categoryScores, answersReview: answers,
       duration: session.endTime ? session.endTime - session.startTime : 0,
+      neurodivergent: session.neurodivergent,
     };
   }
 };
