@@ -642,6 +642,7 @@ You MUST return valid JSON only. No markdown, no explanation, no code fences, no
       overallScore: session.overallScore, verdict, ...fallbackReport,
       categoryScores, answersReview: answers,
       duration: session.endTime ? session.endTime - session.startTime : 0,
+      neurodivergent: session.neurodivergent,
     };
   }
 };
