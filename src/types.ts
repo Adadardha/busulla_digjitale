@@ -99,6 +99,8 @@ export interface InterviewSession {
   questionsAnswered: number;
   hintsUsed: number;
   maxHints: number;
+  /** Neurodiversity support mode — mutates prompts and enables STAR scaffold */
+  neurodivergent?: boolean;
 }
 
 export interface InterviewReport {
