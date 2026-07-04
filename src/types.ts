@@ -126,6 +126,8 @@ export interface InterviewReport {
   weakTopics: string[];
   practiceSuggestions: string[];
   duration: number;
+  neurodivergent?: boolean;
+  idealWorkEnvironment?: string[];
 }
 
 export interface ChatMessage {
