@@ -301,6 +301,7 @@ export const generateDynamicQuestion = async (
   difficulty: DifficultyLevel,
   history: InterviewMessage[],
   weakAreas: string[] = [],
+  neurodivergent: boolean = false,
 ): Promise<{ question: string; type: 'technical' | 'behavioral'; hints: string[] }> => {
   const fallback = getFallbackQuestion(career, mode);
 
@@ -323,11 +324,16 @@ export const generateDynamicQuestion = async (
       .map(m => m.content.substring(0, 100))
       .join(' | ');
 
+    const neurodivergentDirective = neurodivergent ? `
+
+MODALITETI GJITHËPËRFSHIRËS (NEURODIVERSITY SUPPORT MODE) — I AKTIVIZUAR:
+The student has enabled neurodiversity support mode. Strip all ambiguous corporate idioms or open-ended buzzword prompts from the interview script. Frame every scenario clearly and concretely, split complex assignments sequentially into clear structured sub-questions (numbered a, b, c), and prioritize concrete technical/logical focus areas over arbitrary social cues. Avoid metaphors like "sell yourself" or "biggest weakness" — replace with concrete task-based framings.` : '';
+
     const prompt = `Je intervistues ekspert për pozicionin: ${career}
 
 Lloji i intervistës: ${modeDescriptions[mode]}
 Niveli i vështirësisë: ${difficultyContext[difficulty]}
-${weakAreas.length > 0 ? `Fusha që duhen përmirësuar: ${weakAreas.join(', ')}` : ''}
+${weakAreas.length > 0 ? `Fusha që duhen përmirësuar: ${weakAreas.join(', ')}` : ''}${neurodivergentDirective}
 Përgjigjet e fundit të kandidatit: ${historySummary || 'Asnjë ende'}
 
 KTHE VETËM JSON VALID:
