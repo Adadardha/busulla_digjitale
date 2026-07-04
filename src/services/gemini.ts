@@ -1,3 +1,26 @@
+/**
+ * Busulla Digjitale — AI Orchestration Layer
+ * =========================================================================
+ * Current cloud pathway: Google Gemini via @google/generative-ai + Lovable
+ * Cloud edge function (`career-chat`) for the assistant channel.
+ *
+ * INTEL OpenVINO Readiness — Edge Inference Pipeline (planned)
+ * -------------------------------------------------------------------------
+ * The model invocation pathways below are intentionally isolated behind
+ * `callGemini()` and `getCareerAssistantResponse()` so that a local edge
+ * inference runtime (Intel Distribution of OpenVINO Toolkit — e.g.
+ * `openvino.runtime.Core` or the OpenVINO GenAI `LLMPipeline` API) can be
+ * swapped in without touching UI or scoring logic. Deployment placeholders:
+ *
+ *   const OPENVINO_MODEL_PATH  = import.meta.env.VITE_OPENVINO_MODEL_PATH;
+ *   const OPENVINO_DEVICE      = import.meta.env.VITE_OPENVINO_DEVICE || "CPU"; // CPU | GPU | NPU
+ *   const OPENVINO_PRECISION   = "INT8"; // quantized for low-bandwidth Albanian classrooms
+ *
+ * When a local runtime is available, `callGemini()` should short-circuit to
+ * an OpenVINO pipeline stream; otherwise it falls back to the cloud call.
+ * This keeps the app usable on offline / low-bandwidth school hardware.
+ * =========================================================================
+ */
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   QuizAnswer,
