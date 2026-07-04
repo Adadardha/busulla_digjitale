@@ -163,13 +163,12 @@ const CareerAssistant: React.FC<CareerAssistantProps> = ({
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] p-3 ${
-                    msg.role === 'user' ? 'bg-foreground text-background' : 'bg-foreground/10 border border-border'
+                  <div className={`max-w-[85%] p-3 rounded-2xl ${
+                    msg.role === 'user'
+                      ? 'bg-primary/20 border border-primary/40 rounded-tr-sm'
+                      : 'bg-card/60 border border-border rounded-tl-sm'
                   }`}>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                    <p className={`text-[10px] mt-2 ${msg.role === 'user' ? 'text-background/50' : 'text-muted-foreground'}`}>
-                      {formatTime(msg.timestamp)}
-                    </p>
                   </div>
                 </motion.div>
               ))}
