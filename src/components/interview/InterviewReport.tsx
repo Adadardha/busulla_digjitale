@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Lightbulb } from 'lucide-react';
+import { Check, Lightbulb, Home, Brain } from 'lucide-react';
 import { InterviewReport as InterviewReportType } from '../../types';
 import { TRANSLATIONS, INTERVIEW_MODE_INFO } from '../../i18n';
 
