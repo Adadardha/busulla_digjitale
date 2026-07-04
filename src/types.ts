@@ -26,6 +26,10 @@ export interface CareerRoadmap {
   careerPath: string[];
   salaryRange: string;
   jobDemand: string;
+  // Local Albanian economic mapping — three democratized tracks
+  educationTrack?: string[];      // "Arsimi dhe Certifikimet"
+  localMarketTrack?: string[];    // "Tregu Lokal i Punës"
+  practicalSkillsTrack?: string[]; // "Aftësi Praktike"
 }
 
 export interface PredictionResult {
