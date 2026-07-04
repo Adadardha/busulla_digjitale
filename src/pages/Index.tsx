@@ -507,7 +507,17 @@ const Index: React.FC = () => {
           )}
 
           {currentStep === AppState.INTERVIEW_SETUP && prediction && (
-            <InterviewSetup key="setup" prediction={prediction} selectedMode={interviewMode} selectedDifficulty={interviewDifficulty} onModeChange={setInterviewMode} onDifficultyChange={setInterviewDifficulty} onStart={startInterview} />
+            <InterviewSetup
+              key="setup"
+              prediction={prediction}
+              selectedMode={interviewMode}
+              selectedDifficulty={interviewDifficulty}
+              neurodivergent={neurodivergent}
+              onModeChange={setInterviewMode}
+              onDifficultyChange={setInterviewDifficulty}
+              onNeurodivergentChange={setNeurodivergent}
+              onStart={startInterview}
+            />
           )}
 
           {currentStep === AppState.INTERVIEW_SESSION && interviewSession && (
