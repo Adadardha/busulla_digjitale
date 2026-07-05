@@ -4,7 +4,7 @@ import {
   AppState, QuizAnswer, PredictionResult, InterviewMode, DifficultyLevel,
   InterviewSession, InterviewReport as InterviewReportType, ChatSession,
 } from '../types';
-import { TRANSLATIONS, QUIZ_QUESTIONS } from '../i18n';
+import { TRANSLATIONS, QUIZ_QUESTIONS, useLanguage } from '../i18n';
 import {
   predictCareer, generateDynamicQuestion, evaluateAnswerWithFeedback,
   determineNextDifficulty, generateInterviewReport, getHint,
@@ -223,6 +223,7 @@ const AnimatedUsageCounter: React.FC = () => {
 };
 
 const Index: React.FC = () => {
+  const { lang, setLang } = useLanguage();
   const [currentStep, setCurrentStep] = useState<AppState>(AppState.LANDING);
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -417,8 +418,18 @@ const Index: React.FC = () => {
           <span className="font-heading font-bold text-base md:text-lg tracking-tighter uppercase leading-none">Busulla</span>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLang(lang === 'en' ? 'al' : 'en')}
+            aria-label="Toggle language"
+            title="Toggle language"
+            className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all font-mono"
+          >
+            <span className={lang === 'en' ? 'font-bold' : 'opacity-40'}>EN</span>
+            <span className="mx-1 opacity-40">/</span>
+            <span className={lang === 'al' ? 'font-bold' : 'opacity-40'}>AL</span>
+          </button>
           <button onClick={() => setIsAboutOpen(true)} className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all">
-            Rreth
+            {TRANSLATIONS.nav.about}
           </button>
           {currentStep !== AppState.LANDING && (
             <button onClick={resetToStart} className="text-[10px] md:text-xs font-bold uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all">
