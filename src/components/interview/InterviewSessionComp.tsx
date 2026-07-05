@@ -155,27 +155,32 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
               {TRANSLATIONS.interviewSession.title}
             </h2>
             <p className="text-xs md:text-sm text-muted-foreground mt-1 truncate">
-              {session.career} — {session.questionsAnswered} pyetje
+              {session.career} — {session.questionsAnswered} {getLanguage() === 'en' ? 'questions' : 'pyetje'}
               {session.neurodivergent && (
-                <span className="ml-2 text-accent">· Modaliteti Gjithëpërfshirës</span>
+                <span className="ml-2 text-accent">· {getLanguage() === 'en' ? 'Inclusion Mode' : 'Modaliteti Gjithëpërfshirës'}</span>
               )}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 md:gap-3">
-            <div className="glass-card px-3 py-2">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.timeRemaining}</p>
-              <p className="text-lg font-mono font-bold">{durationStr}</p>
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            {/* Minimalist stopwatch pill */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 backdrop-blur-sm">
+              <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                {TRANSLATIONS.interviewSession.timeRemaining}
+              </span>
+              <span className="font-mono text-sm font-bold tabular-nums">{durationStr}</span>
             </div>
-            <div className="glass-card px-3 py-2">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.score}</p>
-              <p className="text-lg font-mono font-bold intel-text-gradient">{session.overallScore}/100</p>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 backdrop-blur-sm">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.score}</span>
+              <span className="font-mono text-sm font-bold intel-text-gradient">{session.overallScore}/100</span>
             </div>
-            <div className={`glass-card px-3 py-2 ${difficultyInfo.bgColor}`}>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.currentDifficulty}</p>
-              <p className={`text-lg font-bold ${difficultyInfo.color}`}>{difficultyInfo.name}</p>
+            <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm ${difficultyInfo.bgColor} ${difficultyInfo.borderColor}`}>
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.currentDifficulty}</span>
+              <span className={`text-sm font-bold ${difficultyInfo.color}`}>{difficultyInfo.name}</span>
             </div>
           </div>
         </div>
+
 
         {session.neurodivergent && (
           <div className="mb-4">
