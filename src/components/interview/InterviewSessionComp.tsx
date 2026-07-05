@@ -93,9 +93,11 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
   const handleSubmitClick = () => {
     const check = isSpammyOrTooShort(userInput);
     if (check.blocked) {
-      toast.warning(GUARDRAIL_MESSAGE, {
+      toast.warning(guardrailMessage(), {
         description: check.reason === 'nonanswer'
-          ? 'Provoni: parafrazoni pyetjen, ndani atë që dini, ose bëni hipoteza.'
+          ? (getLanguage() === 'en'
+              ? 'Try: paraphrase the question, share what you know, or make a hypothesis.'
+              : 'Provoni: parafrazoni pyetjen, ndani atë që dini, ose bëni hipoteza.')
           : undefined,
       });
       return;
@@ -115,14 +117,18 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
 
   const toggleMic = () => {
     if (!supported) {
-      toast.error('Njohja e zërit nuk mbështetet nga ky shfletues. Provoni Chrome ose Edge.');
+      toast.error(
+        getLanguage() === 'en'
+          ? 'Speech recognition is not supported in this browser. Try Chrome or Edge.'
+          : 'Njohja e zërit nuk mbështetet nga ky shfletues. Provoni Chrome ose Edge.',
+      );
       return;
     }
     if (listening) {
       stop();
     } else {
       baseTextRef.current = userInput;
-      start('sq-AL');
+      start();
     }
   };
 
