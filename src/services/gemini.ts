@@ -407,36 +407,36 @@ export const evaluateAnswerWithFeedback = async (
 MODALITETI GJITHËPËRFSHIRËS (NEURODIVERSITY SUPPORT MODE) — I AKTIVIZUAR:
 Fokuso vlerësimin te qëndrueshmëria arkitektonike dhe shprehja objektive e aftësive teknike/logjike, jo te kliçetë sjellorë ("passion", "team spirit", kontakti me sy). NUK duhet të penalizosh mungesën e gjuhës sociale-korporative. Vlerëso: qartësinë strukturore, saktësinë faktike, dhe zbatueshmërinë teknike. Nëse përgjigjja është e strukturuar sipas metodës STAR (Situata / Detyra / Veprimi / Rezultati), lëvdo strukturën.` : '';
 
-    const prompt = `Ti je një intervistues rigoroz dhe këshilltar karriere ekspert për pozicionin ${career}. Vlerëso përgjigjen si një evaluator strikt, jo si një gjenerator gjenerik teksti.
+    const prompt = `You are an elite, empathetic Talent Acquisition Director evaluating a live interview response for the position of ${career}. You give precise, actionable, specific feedback — never generic compliments.
 
-Pyetja: ${question}
-Përgjigjja e kandidatit: "${answer}"
-Lloji i intervistës: ${mode}
-Vështirësia: ${difficulty}${neurodivergentAppendix}
+Question: ${question}
+Candidate response: "${answer}"
+Interview mode: ${mode}
+Difficulty: ${difficulty}${neurodivergentAppendix}
 
-RREGULLA STRIKTE VLERËSIMI (NDJEK PA PËRJASHTIM):
-1. NËSE përgjigjja është BOSH, "nuk e di", "s'e di", "se di", "skam ide", "spo di", "nuk kam ide", ose çdo variant i tillë — score MUND TË JETË VETËM 0. Në "strengths" shkruaj: "Asnjë - kandidati nuk ka ofruar përgjigje." Në "improvements" shkruaj: "Në një intervistë reale, të thuash 'nuk e di' pa u përpjekur është e papranueshme. Edhe pa njohuri të plota, tregon procesin e të menduarit, bëj hipoteza, ose kërko sqarim." Në "detailedFeedback" shpjego qartë se një jo-përgjigje nuk mund të vlerësohet dhe këshillo si ta strukturojë kandidati një përgjigje edhe kur nuk është i sigurt.
-2. NËSE përgjigjja është irelevante ose nuk lidhet fare me pyetjen: score 0-10.
-3. NËSE përgjigjja është 1-2 fjalë (por përpiqet të jetë përgjigje): score 5-15.
-4. Përgjigje e shkurtër, sipërfaqësore, pa shembuj: score 15-35.
-5. Përgjigje mesatare me pak detaje: score 35-55.
-6. Përgjigje e mirë me shembuj konkretë: score 55-72.
-7. Përgjigje e detajuar me analizë të thellë: score 72-88.
-8. Përgjigje e shkëlqyer, eksperte, me shembuj konkretë dhe reflektim: score 88-100.
+STRICT EVALUATION RULES (follow without exception):
+1. If the response is empty, "I don't know", "nuk e di", "se di", "skam ide", "idk", or any equivalent non-answer — score MUST be 0. In "strengths" write: "None — the candidate offered no answer." In "improvements" write: "In a real interview, saying 'I don't know' without attempting is unacceptable. Even without full knowledge, show the reasoning process, make hypotheses, or ask for clarification." In "detailedFeedback" explain concretely how to structure a response when uncertain.
+2. If the response is irrelevant to the question: score 0-10.
+3. 1-2 words (but attempting): score 5-15.
+4. Short, superficial, no examples: score 15-35.
+5. Average with few details: score 35-55.
+6. Good response with concrete examples: score 55-72.
+7. Detailed with deep analysis: score 72-88.
+8. Excellent, expert-level with concrete examples and reflection: score 88-100.
 
-MOS bëj kompliment nëse nuk meriton. MOS thuaj "kandidati u përpoq" nëse kandidati NUK u përpoq.
+Feedback must be SPECIFIC — reference the exact phrases, gaps, or claims in the candidate's response. Do NOT compliment unless earned. Match the language of the candidate's response (English or Albanian).
 
-You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.
-
+Return ONLY valid JSON (no markdown, no fences):
 {
-  "score": <number 0-100 based on rules above>,
-  "strengths": ["pika e fortë 1", "pika e fortë 2"],
-  "improvements": ["përmirësim 1", "përmirësim 2"],
-  "detailedFeedback": "Feedback i detajuar në shqip, i drejtpërdrejtë dhe konstruktiv",
-  "technicalAccuracy": <number 0-100>,
-  "communication": <number 0-100>,
-  "problemSolving": <number 0-100>
+  "score": <number 0-100>,
+  "strengths": ["specific strength citing the response", "another specific strength"],
+  "improvements": ["specific, actionable improvement", "another"],
+  "detailedFeedback": "2-3 sentences of precise, direct, constructive feedback",
+  "technicalAccuracy": <0-100>,
+  "communication": <0-100>,
+  "problemSolving": <0-100>
 }`;
+
 
     const text = await callGemini(prompt);
     const parsed = safeParse<InterviewFeedback | null>(text, null);
