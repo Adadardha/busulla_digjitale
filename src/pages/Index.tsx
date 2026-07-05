@@ -4,7 +4,7 @@ import {
   AppState, QuizAnswer, PredictionResult, InterviewMode, DifficultyLevel,
   InterviewSession, InterviewReport as InterviewReportType, ChatSession,
 } from '../types';
-import { TRANSLATIONS, QUIZ_QUESTIONS } from '../i18n';
+import { TRANSLATIONS, QUIZ_QUESTIONS, useLanguage } from '../i18n';
 import {
   predictCareer, generateDynamicQuestion, evaluateAnswerWithFeedback,
   determineNextDifficulty, generateInterviewReport, getHint,
@@ -193,6 +193,7 @@ const InteractiveCompass: React.FC<{ isRevealing?: boolean }> = ({ isRevealing }
 };
 
 const AnimatedUsageCounter: React.FC = () => {
+  const { lang } = useLanguage();
   const stored = parseInt(localStorage.getItem(USAGE_KEY) || String(USAGE_BASELINE), 10);
   const target = Math.max(stored, USAGE_BASELINE);
   const [count, setCount] = useState(0);
@@ -217,12 +218,13 @@ const AnimatedUsageCounter: React.FC = () => {
 
   return (
     <p className="text-sm text-muted-foreground">
-      {count}+ studentë kanë përdorur Busullën
+      {count}+ {lang === 'en' ? 'students have used Digital Compass' : 'studentë kanë përdorur Busullën'}
     </p>
   );
 };
 
 const Index: React.FC = () => {
+  const { lang, setLang } = useLanguage();
   const [currentStep, setCurrentStep] = useState<AppState>(AppState.LANDING);
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -417,8 +419,18 @@ const Index: React.FC = () => {
           <span className="font-heading font-bold text-base md:text-lg tracking-tighter uppercase leading-none">Busulla</span>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLang(lang === 'en' ? 'al' : 'en')}
+            aria-label="Toggle language"
+            title="Toggle language"
+            className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all font-mono"
+          >
+            <span className={lang === 'en' ? 'font-bold' : 'opacity-40'}>EN</span>
+            <span className="mx-1 opacity-40">/</span>
+            <span className={lang === 'al' ? 'font-bold' : 'opacity-40'}>AL</span>
+          </button>
           <button onClick={() => setIsAboutOpen(true)} className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all">
-            Rreth
+            {TRANSLATIONS.nav.about}
           </button>
           {currentStep !== AppState.LANDING && (
             <button onClick={resetToStart} className="text-[10px] md:text-xs font-bold uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all">
@@ -444,7 +456,7 @@ const Index: React.FC = () => {
                 className="relative z-10 inline-flex items-center gap-2 border border-border/60 bg-background/40 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                Orientim karriere · i mundësuar nga AI
+                {lang === 'en' ? 'Career orientation · powered by AI' : 'Orientim karriere · i mundësuar nga AI'}
               </motion.div>
 
               <ASCIIHeader />
@@ -478,11 +490,11 @@ const Index: React.FC = () => {
               <div className="relative z-10 flex flex-col items-center gap-3">
                 <AnimatedUsageCounter />
                 <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground/80">
-                  <span>7 pyetje adaptive</span>
+                  <span>{lang === 'en' ? '7 adaptive questions' : '7 pyetje adaptive'}</span>
                   <span className="w-1 h-1 rounded-full bg-border" />
-                  <span>Intervista simulate</span>
+                  <span>{lang === 'en' ? 'Simulated interviews' : 'Intervista simulate'}</span>
                   <span className="w-1 h-1 rounded-full bg-border" />
-                  <span>Asistent AI 24/7</span>
+                  <span>{lang === 'en' ? 'AI assistant 24/7' : 'Asistent AI 24/7'}</span>
                 </div>
               </div>
               <UsageStatsBanner />

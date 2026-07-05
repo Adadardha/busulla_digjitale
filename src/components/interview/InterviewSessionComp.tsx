@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lightbulb, Check, ArrowUp, Mic, MicOff, ClipboardList } from 'lucide-react';
+import { Lightbulb, Check, ArrowUp, Mic, MicOff, ClipboardList, Timer } from 'lucide-react';
 import { toast } from 'sonner';
 import { InterviewSession as InterviewSessionType } from '../../types';
-import { TRANSLATIONS, DIFFICULTY_INFO } from '../../i18n';
+import { TRANSLATIONS, DIFFICULTY_INFO, getLanguage } from '../../i18n';
+import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 
 interface InterviewSessionProps {
   session: InterviewSessionType;
@@ -20,76 +21,17 @@ interface InterviewSessionProps {
 function isSpammyOrTooShort(text: string): { blocked: boolean; reason?: string } {
   const trimmed = text.trim();
   if (trimmed.length < 5) return { blocked: true, reason: 'short' };
-  // Repeating character detection e.g. "ee", "aaaa", "sdsdsd"
   if (/^(.)\1{2,}$/.test(trimmed)) return { blocked: true, reason: 'repeat' };
   if (/^([a-zç]{1,3})\1{2,}$/i.test(trimmed.replace(/\s+/g, ''))) return { blocked: true, reason: 'repeat' };
-  const nonAnswer = /^(nuk\s*e\s*di|s'?e\s*di|se\s*di|spo\s*di|skam\s*ide|s'?kam\s*ide|nuk\s*kam\s*ide|idk|no\s*idea)\.?$/i;
+  const nonAnswer = /^(nuk\s*e\s*di|s'?e\s*di|se\s*di|spo\s*di|skam\s*ide|s'?kam\s*ide|nuk\s*kam\s*ide|idk|i\s*don'?t\s*know|no\s*idea)\.?$/i;
   if (nonAnswer.test(trimmed)) return { blocked: true, reason: 'nonanswer' };
   return { blocked: false };
 }
 
-const GUARDRAIL_MESSAGE =
-  "Ju lutem, jepni një përgjigje pak më të detajuar që inteligjenca artificiale t'ju ndihmojë më mirë!";
-
-// ---------- Web Speech API hook ----------
-function useSpeechRecognition(
-  onFinal: (transcript: string) => void,
-  onInterim: (transcript: string) => void,
-) {
-  const [listening, setListening] = useState(false);
-  const [supported, setSupported] = useState(true);
-  const recognitionRef = useRef<any>(null);
-
-  useEffect(() => {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) {
-      setSupported(false);
-      return;
-    }
-    const rec = new SR();
-    rec.continuous = false;
-    rec.interimResults = true;
-    rec.lang = 'sq-AL'; // Albanian; browsers fall back to en-US if unavailable
-    rec.onresult = (event: any) => {
-      let interim = '';
-      let final = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const t = event.results[i][0].transcript;
-        if (event.results[i].isFinal) final += t;
-        else interim += t;
-      }
-      if (interim) onInterim(interim);
-      if (final) onFinal(final);
-    };
-    rec.onend = () => setListening(false);
-    rec.onerror = () => setListening(false);
-    recognitionRef.current = rec;
-    return () => {
-      try { rec.stop(); } catch {}
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const start = (lang: string = 'sq-AL') => {
-    const rec = recognitionRef.current;
-    if (!rec) return;
-    try {
-      rec.lang = lang;
-      rec.start();
-      setListening(true);
-    } catch {
-      setListening(false);
-    }
-  };
-  const stop = () => {
-    const rec = recognitionRef.current;
-    if (!rec) return;
-    try { rec.stop(); } catch {}
-    setListening(false);
-  };
-
-  return { listening, supported, start, stop };
-}
+const guardrailMessage = () =>
+  getLanguage() === 'en'
+    ? 'Please give a slightly more detailed answer so the AI can help you better.'
+    : "Ju lutem, jepni një përgjigje pak më të detajuar që inteligjenca artificiale t'ju ndihmojë më mirë!";
 
 // ---------- STAR scaffold (neurodiversity mode) ----------
 const StarScaffold: React.FC = () => (
@@ -151,9 +93,11 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
   const handleSubmitClick = () => {
     const check = isSpammyOrTooShort(userInput);
     if (check.blocked) {
-      toast.warning(GUARDRAIL_MESSAGE, {
+      toast.warning(guardrailMessage(), {
         description: check.reason === 'nonanswer'
-          ? 'Provoni: parafrazoni pyetjen, ndani atë që dini, ose bëni hipoteza.'
+          ? (getLanguage() === 'en'
+              ? 'Try: paraphrase the question, share what you know, or make a hypothesis.'
+              : 'Provoni: parafrazoni pyetjen, ndani atë që dini, ose bëni hipoteza.')
           : undefined,
       });
       return;
@@ -173,14 +117,18 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
 
   const toggleMic = () => {
     if (!supported) {
-      toast.error('Njohja e zërit nuk mbështetet nga ky shfletues. Provoni Chrome ose Edge.');
+      toast.error(
+        getLanguage() === 'en'
+          ? 'Speech recognition is not supported in this browser. Try Chrome or Edge.'
+          : 'Njohja e zërit nuk mbështetet nga ky shfletues. Provoni Chrome ose Edge.',
+      );
       return;
     }
     if (listening) {
       stop();
     } else {
       baseTextRef.current = userInput;
-      start('sq-AL');
+      start();
     }
   };
 
@@ -207,27 +155,32 @@ const InterviewSessionComponent: React.FC<InterviewSessionProps> = ({
               {TRANSLATIONS.interviewSession.title}
             </h2>
             <p className="text-xs md:text-sm text-muted-foreground mt-1 truncate">
-              {session.career} — {session.questionsAnswered} pyetje
+              {session.career} — {session.questionsAnswered} {getLanguage() === 'en' ? 'questions' : 'pyetje'}
               {session.neurodivergent && (
-                <span className="ml-2 text-accent">· Modaliteti Gjithëpërfshirës</span>
+                <span className="ml-2 text-accent">· {getLanguage() === 'en' ? 'Inclusion Mode' : 'Modaliteti Gjithëpërfshirës'}</span>
               )}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 md:gap-3">
-            <div className="glass-card px-3 py-2">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.timeRemaining}</p>
-              <p className="text-lg font-mono font-bold">{durationStr}</p>
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            {/* Minimalist stopwatch pill */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 backdrop-blur-sm">
+              <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                {TRANSLATIONS.interviewSession.timeRemaining}
+              </span>
+              <span className="font-mono text-sm font-bold tabular-nums">{durationStr}</span>
             </div>
-            <div className="glass-card px-3 py-2">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.score}</p>
-              <p className="text-lg font-mono font-bold intel-text-gradient">{session.overallScore}/100</p>
+            <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 backdrop-blur-sm">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.score}</span>
+              <span className="font-mono text-sm font-bold intel-text-gradient">{session.overallScore}/100</span>
             </div>
-            <div className={`glass-card px-3 py-2 ${difficultyInfo.bgColor}`}>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.currentDifficulty}</p>
-              <p className={`text-lg font-bold ${difficultyInfo.color}`}>{difficultyInfo.name}</p>
+            <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm ${difficultyInfo.bgColor} ${difficultyInfo.borderColor}`}>
+              <span className="text-xs uppercase tracking-wider text-muted-foreground">{TRANSLATIONS.interviewSession.currentDifficulty}</span>
+              <span className={`text-sm font-bold ${difficultyInfo.color}`}>{difficultyInfo.name}</span>
             </div>
           </div>
         </div>
+
 
         {session.neurodivergent && (
           <div className="mb-4">

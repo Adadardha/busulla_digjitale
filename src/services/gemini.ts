@@ -307,40 +307,54 @@ export const generateDynamicQuestion = async (
 
   return withRetry(async () => {
     const modeDescriptions = {
-      [InterviewMode.TECHNICAL]: 'pyetje teknike specifike për fushën',
-      [InterviewMode.BEHAVIORAL]: 'pyetje rreth përvojave dhe situatave të sjelljes',
-      [InterviewMode.MIXED]: 'pyetje të përzier teknike dhe sjelljeore',
-      [InterviewMode.STRESS]: 'pyetje sfiduese që testojnë reagimin nën presion',
+      [InterviewMode.TECHNICAL]: 'targeted technical questions for the domain',
+      [InterviewMode.BEHAVIORAL]: 'behavioral questions about past experiences and situations',
+      [InterviewMode.MIXED]: 'a mix of technical and behavioral questions',
+      [InterviewMode.STRESS]: 'challenging questions that test reaction under pressure',
     };
     const difficultyContext = {
-      [DifficultyLevel.EASY]: 'Bazike, për ngrohje',
-      [DifficultyLevel.MEDIUM]: 'Me intensitet mesatar, kërkon mendim',
-      [DifficultyLevel.HARD]: 'Komplekse, kërkon thellësi dhe analitikë',
+      [DifficultyLevel.EASY]: 'Basic, warm-up level',
+      [DifficultyLevel.MEDIUM]: 'Medium intensity — requires thought',
+      [DifficultyLevel.HARD]: 'Complex — requires depth and analytical rigor',
     };
 
-    const historySummary = history
-      .filter(m => m.role === 'user')
-      .slice(-3)
-      .map(m => m.content.substring(0, 100))
-      .join(' | ');
+    // Build a cohesive narrative from the last few user answers so the AI can
+    // pivot into contextual follow-ups instead of asking generic new questions.
+    const recentTurns = history
+      .slice(-6)
+      .map(m => `${m.role === 'user' ? 'CANDIDATE' : 'INTERVIEWER'}: ${m.content.substring(0, 260)}`)
+      .join('\n');
+
+    const lastUserAnswer = [...history].reverse().find(m => m.role === 'user');
+    const lastScore = lastUserAnswer?.metadata?.feedback?.score;
+    const lastWasVague = typeof lastScore === 'number' && lastScore < 45;
 
     const neurodivergentDirective = neurodivergent ? `
 
-MODALITETI GJITHËPËRFSHIRËS (NEURODIVERSITY SUPPORT MODE) — I AKTIVIZUAR:
-The student has enabled neurodiversity support mode. Strip all ambiguous corporate idioms or open-ended buzzword prompts from the interview script. Frame every scenario clearly and concretely, split complex assignments sequentially into clear structured sub-questions (numbered a, b, c), and prioritize concrete technical/logical focus areas over arbitrary social cues. Avoid metaphors like "sell yourself" or "biggest weakness" — replace with concrete task-based framings.` : '';
+INCLUSION MODE (Neurodiversity Support) — ACTIVE:
+Strip ambiguous corporate idioms and open-ended buzzwords. Frame every scenario concretely. Split complex prompts into clear numbered sub-parts (a, b, c). Prioritize technical and logical focus. Replace metaphors like "sell yourself" or "biggest weakness" with concrete task-based framings.` : '';
 
-    const prompt = `Je intervistues ekspert për pozicionin: ${career}
+    const prompt = `You are an elite, empathetic Talent Acquisition Director specialized in modern tech, digital, and creative industry roles. You are conducting a live interview for the position: ${career}.
 
-Lloji i intervistës: ${modeDescriptions[mode]}
-Niveli i vështirësisë: ${difficultyContext[difficulty]}
-${weakAreas.length > 0 ? `Fusha që duhen përmirësuar: ${weakAreas.join(', ')}` : ''}${neurodivergentDirective}
-Përgjigjet e fundit të kandidatit: ${historySummary || 'Asnjë ende'}
+Interview mode: ${modeDescriptions[mode]}
+Difficulty level: ${difficultyContext[difficulty]}
+${weakAreas.length > 0 ? `Candidate weak areas so far: ${weakAreas.join(', ')}` : ''}${neurodivergentDirective}
 
-KTHE VETËM JSON VALID:
+CONVERSATION SO FAR (most recent first is at the bottom):
+${recentTurns || '(no prior turns — this is the opening question)'}
+
+PROMPT ORCHESTRATION RULES — FOLLOW STRICTLY:
+1. CONTEXT RETENTION: Cross-reference specific concepts, projects, tools, or claims the candidate mentioned in earlier answers. Build a cohesive narrative — a real executive interview builds on prior turns. Reference them by name when relevant (e.g. "You mentioned React earlier — how would that inform...").
+2. DYNAMIC SCAFFOLDING: ${lastWasVague ? 'The candidate\'s last answer was vague or shallow. DO NOT move on to a new topic. Instead, pivot with a contextual follow-up that pins them down on specifics — ask for a concrete example, a metric, or a decision point they had to make.' : 'If the candidate gave a substantive answer, build on it or introduce a related but distinct challenge.'}
+3. NO GENERIC QUESTIONS: Never ask "tell me about yourself" or "what are your strengths" unless it's the very first turn. Prefer scenario-driven prompts tied to the role.
+4. ONE QUESTION AT A TIME: Ask exactly one primary question. Sub-parts allowed only in Inclusion Mode.
+5. LANGUAGE: Match the language of the most recent candidate message. If none, default to English.
+
+Return ONLY valid JSON (no markdown, no fences):
 {
-  "question": "Pyetja në shqip (e qartë dhe koncize)",
-  "type": "technical ose behavioral",
-  "hints": ["hint 1 pa zbuluar përgjigjen", "hint 2", "hint 3"]
+  "question": "the interview question, phrased naturally and specifically",
+  "type": "technical" or "behavioral",
+  "hints": ["hint 1 without revealing the answer", "hint 2", "hint 3"]
 }${STRICT_JSON_INSTRUCTION}`;
 
     try {
@@ -353,6 +367,7 @@ KTHE VETËM JSON VALID:
     }
   });
 };
+
 
 function getFallbackQuestion(
   career: string,
@@ -392,36 +407,36 @@ export const evaluateAnswerWithFeedback = async (
 MODALITETI GJITHËPËRFSHIRËS (NEURODIVERSITY SUPPORT MODE) — I AKTIVIZUAR:
 Fokuso vlerësimin te qëndrueshmëria arkitektonike dhe shprehja objektive e aftësive teknike/logjike, jo te kliçetë sjellorë ("passion", "team spirit", kontakti me sy). NUK duhet të penalizosh mungesën e gjuhës sociale-korporative. Vlerëso: qartësinë strukturore, saktësinë faktike, dhe zbatueshmërinë teknike. Nëse përgjigjja është e strukturuar sipas metodës STAR (Situata / Detyra / Veprimi / Rezultati), lëvdo strukturën.` : '';
 
-    const prompt = `Ti je një intervistues rigoroz dhe këshilltar karriere ekspert për pozicionin ${career}. Vlerëso përgjigjen si një evaluator strikt, jo si një gjenerator gjenerik teksti.
+    const prompt = `You are an elite, empathetic Talent Acquisition Director evaluating a live interview response for the position of ${career}. You give precise, actionable, specific feedback — never generic compliments.
 
-Pyetja: ${question}
-Përgjigjja e kandidatit: "${answer}"
-Lloji i intervistës: ${mode}
-Vështirësia: ${difficulty}${neurodivergentAppendix}
+Question: ${question}
+Candidate response: "${answer}"
+Interview mode: ${mode}
+Difficulty: ${difficulty}${neurodivergentAppendix}
 
-RREGULLA STRIKTE VLERËSIMI (NDJEK PA PËRJASHTIM):
-1. NËSE përgjigjja është BOSH, "nuk e di", "s'e di", "se di", "skam ide", "spo di", "nuk kam ide", ose çdo variant i tillë — score MUND TË JETË VETËM 0. Në "strengths" shkruaj: "Asnjë - kandidati nuk ka ofruar përgjigje." Në "improvements" shkruaj: "Në një intervistë reale, të thuash 'nuk e di' pa u përpjekur është e papranueshme. Edhe pa njohuri të plota, tregon procesin e të menduarit, bëj hipoteza, ose kërko sqarim." Në "detailedFeedback" shpjego qartë se një jo-përgjigje nuk mund të vlerësohet dhe këshillo si ta strukturojë kandidati një përgjigje edhe kur nuk është i sigurt.
-2. NËSE përgjigjja është irelevante ose nuk lidhet fare me pyetjen: score 0-10.
-3. NËSE përgjigjja është 1-2 fjalë (por përpiqet të jetë përgjigje): score 5-15.
-4. Përgjigje e shkurtër, sipërfaqësore, pa shembuj: score 15-35.
-5. Përgjigje mesatare me pak detaje: score 35-55.
-6. Përgjigje e mirë me shembuj konkretë: score 55-72.
-7. Përgjigje e detajuar me analizë të thellë: score 72-88.
-8. Përgjigje e shkëlqyer, eksperte, me shembuj konkretë dhe reflektim: score 88-100.
+STRICT EVALUATION RULES (follow without exception):
+1. If the response is empty, "I don't know", "nuk e di", "se di", "skam ide", "idk", or any equivalent non-answer — score MUST be 0. In "strengths" write: "None — the candidate offered no answer." In "improvements" write: "In a real interview, saying 'I don't know' without attempting is unacceptable. Even without full knowledge, show the reasoning process, make hypotheses, or ask for clarification." In "detailedFeedback" explain concretely how to structure a response when uncertain.
+2. If the response is irrelevant to the question: score 0-10.
+3. 1-2 words (but attempting): score 5-15.
+4. Short, superficial, no examples: score 15-35.
+5. Average with few details: score 35-55.
+6. Good response with concrete examples: score 55-72.
+7. Detailed with deep analysis: score 72-88.
+8. Excellent, expert-level with concrete examples and reflection: score 88-100.
 
-MOS bëj kompliment nëse nuk meriton. MOS thuaj "kandidati u përpoq" nëse kandidati NUK u përpoq.
+Feedback must be SPECIFIC — reference the exact phrases, gaps, or claims in the candidate's response. Do NOT compliment unless earned. Match the language of the candidate's response (English or Albanian).
 
-You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.
-
+Return ONLY valid JSON (no markdown, no fences):
 {
-  "score": <number 0-100 based on rules above>,
-  "strengths": ["pika e fortë 1", "pika e fortë 2"],
-  "improvements": ["përmirësim 1", "përmirësim 2"],
-  "detailedFeedback": "Feedback i detajuar në shqip, i drejtpërdrejtë dhe konstruktiv",
-  "technicalAccuracy": <number 0-100>,
-  "communication": <number 0-100>,
-  "problemSolving": <number 0-100>
+  "score": <number 0-100>,
+  "strengths": ["specific strength citing the response", "another specific strength"],
+  "improvements": ["specific, actionable improvement", "another"],
+  "detailedFeedback": "2-3 sentences of precise, direct, constructive feedback",
+  "technicalAccuracy": <0-100>,
+  "communication": <0-100>,
+  "problemSolving": <0-100>
 }`;
+
 
     const text = await callGemini(prompt);
     const parsed = safeParse<InterviewFeedback | null>(text, null);
