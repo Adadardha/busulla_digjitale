@@ -307,40 +307,54 @@ export const generateDynamicQuestion = async (
 
   return withRetry(async () => {
     const modeDescriptions = {
-      [InterviewMode.TECHNICAL]: 'pyetje teknike specifike për fushën',
-      [InterviewMode.BEHAVIORAL]: 'pyetje rreth përvojave dhe situatave të sjelljes',
-      [InterviewMode.MIXED]: 'pyetje të përzier teknike dhe sjelljeore',
-      [InterviewMode.STRESS]: 'pyetje sfiduese që testojnë reagimin nën presion',
+      [InterviewMode.TECHNICAL]: 'targeted technical questions for the domain',
+      [InterviewMode.BEHAVIORAL]: 'behavioral questions about past experiences and situations',
+      [InterviewMode.MIXED]: 'a mix of technical and behavioral questions',
+      [InterviewMode.STRESS]: 'challenging questions that test reaction under pressure',
     };
     const difficultyContext = {
-      [DifficultyLevel.EASY]: 'Bazike, për ngrohje',
-      [DifficultyLevel.MEDIUM]: 'Me intensitet mesatar, kërkon mendim',
-      [DifficultyLevel.HARD]: 'Komplekse, kërkon thellësi dhe analitikë',
+      [DifficultyLevel.EASY]: 'Basic, warm-up level',
+      [DifficultyLevel.MEDIUM]: 'Medium intensity — requires thought',
+      [DifficultyLevel.HARD]: 'Complex — requires depth and analytical rigor',
     };
 
-    const historySummary = history
-      .filter(m => m.role === 'user')
-      .slice(-3)
-      .map(m => m.content.substring(0, 100))
-      .join(' | ');
+    // Build a cohesive narrative from the last few user answers so the AI can
+    // pivot into contextual follow-ups instead of asking generic new questions.
+    const recentTurns = history
+      .slice(-6)
+      .map(m => `${m.role === 'user' ? 'CANDIDATE' : 'INTERVIEWER'}: ${m.content.substring(0, 260)}`)
+      .join('\n');
+
+    const lastUserAnswer = [...history].reverse().find(m => m.role === 'user');
+    const lastScore = lastUserAnswer?.metadata?.feedback?.score;
+    const lastWasVague = typeof lastScore === 'number' && lastScore < 45;
 
     const neurodivergentDirective = neurodivergent ? `
 
-MODALITETI GJITHËPËRFSHIRËS (NEURODIVERSITY SUPPORT MODE) — I AKTIVIZUAR:
-The student has enabled neurodiversity support mode. Strip all ambiguous corporate idioms or open-ended buzzword prompts from the interview script. Frame every scenario clearly and concretely, split complex assignments sequentially into clear structured sub-questions (numbered a, b, c), and prioritize concrete technical/logical focus areas over arbitrary social cues. Avoid metaphors like "sell yourself" or "biggest weakness" — replace with concrete task-based framings.` : '';
+INCLUSION MODE (Neurodiversity Support) — ACTIVE:
+Strip ambiguous corporate idioms and open-ended buzzwords. Frame every scenario concretely. Split complex prompts into clear numbered sub-parts (a, b, c). Prioritize technical and logical focus. Replace metaphors like "sell yourself" or "biggest weakness" with concrete task-based framings.` : '';
 
-    const prompt = `Je intervistues ekspert për pozicionin: ${career}
+    const prompt = `You are an elite, empathetic Talent Acquisition Director specialized in modern tech, digital, and creative industry roles. You are conducting a live interview for the position: ${career}.
 
-Lloji i intervistës: ${modeDescriptions[mode]}
-Niveli i vështirësisë: ${difficultyContext[difficulty]}
-${weakAreas.length > 0 ? `Fusha që duhen përmirësuar: ${weakAreas.join(', ')}` : ''}${neurodivergentDirective}
-Përgjigjet e fundit të kandidatit: ${historySummary || 'Asnjë ende'}
+Interview mode: ${modeDescriptions[mode]}
+Difficulty level: ${difficultyContext[difficulty]}
+${weakAreas.length > 0 ? `Candidate weak areas so far: ${weakAreas.join(', ')}` : ''}${neurodivergentDirective}
 
-KTHE VETËM JSON VALID:
+CONVERSATION SO FAR (most recent first is at the bottom):
+${recentTurns || '(no prior turns — this is the opening question)'}
+
+PROMPT ORCHESTRATION RULES — FOLLOW STRICTLY:
+1. CONTEXT RETENTION: Cross-reference specific concepts, projects, tools, or claims the candidate mentioned in earlier answers. Build a cohesive narrative — a real executive interview builds on prior turns. Reference them by name when relevant (e.g. "You mentioned React earlier — how would that inform...").
+2. DYNAMIC SCAFFOLDING: ${lastWasVague ? 'The candidate\'s last answer was vague or shallow. DO NOT move on to a new topic. Instead, pivot with a contextual follow-up that pins them down on specifics — ask for a concrete example, a metric, or a decision point they had to make.' : 'If the candidate gave a substantive answer, build on it or introduce a related but distinct challenge.'}
+3. NO GENERIC QUESTIONS: Never ask "tell me about yourself" or "what are your strengths" unless it's the very first turn. Prefer scenario-driven prompts tied to the role.
+4. ONE QUESTION AT A TIME: Ask exactly one primary question. Sub-parts allowed only in Inclusion Mode.
+5. LANGUAGE: Match the language of the most recent candidate message. If none, default to English.
+
+Return ONLY valid JSON (no markdown, no fences):
 {
-  "question": "Pyetja në shqip (e qartë dhe koncize)",
-  "type": "technical ose behavioral",
-  "hints": ["hint 1 pa zbuluar përgjigjen", "hint 2", "hint 3"]
+  "question": "the interview question, phrased naturally and specifically",
+  "type": "technical" or "behavioral",
+  "hints": ["hint 1 without revealing the answer", "hint 2", "hint 3"]
 }${STRICT_JSON_INSTRUCTION}`;
 
     try {
@@ -353,6 +367,7 @@ KTHE VETËM JSON VALID:
     }
   });
 };
+
 
 function getFallbackQuestion(
   career: string,
