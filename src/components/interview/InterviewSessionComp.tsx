@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lightbulb, Check, ArrowUp, Mic, MicOff, ClipboardList } from 'lucide-react';
+import { Lightbulb, Check, ArrowUp, Mic, MicOff, ClipboardList, Timer } from 'lucide-react';
 import { toast } from 'sonner';
 import { InterviewSession as InterviewSessionType } from '../../types';
-import { TRANSLATIONS, DIFFICULTY_INFO } from '../../i18n';
+import { TRANSLATIONS, DIFFICULTY_INFO, getLanguage } from '../../i18n';
+import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 
 interface InterviewSessionProps {
   session: InterviewSessionType;
@@ -20,76 +21,17 @@ interface InterviewSessionProps {
 function isSpammyOrTooShort(text: string): { blocked: boolean; reason?: string } {
   const trimmed = text.trim();
   if (trimmed.length < 5) return { blocked: true, reason: 'short' };
-  // Repeating character detection e.g. "ee", "aaaa", "sdsdsd"
   if (/^(.)\1{2,}$/.test(trimmed)) return { blocked: true, reason: 'repeat' };
   if (/^([a-zç]{1,3})\1{2,}$/i.test(trimmed.replace(/\s+/g, ''))) return { blocked: true, reason: 'repeat' };
-  const nonAnswer = /^(nuk\s*e\s*di|s'?e\s*di|se\s*di|spo\s*di|skam\s*ide|s'?kam\s*ide|nuk\s*kam\s*ide|idk|no\s*idea)\.?$/i;
+  const nonAnswer = /^(nuk\s*e\s*di|s'?e\s*di|se\s*di|spo\s*di|skam\s*ide|s'?kam\s*ide|nuk\s*kam\s*ide|idk|i\s*don'?t\s*know|no\s*idea)\.?$/i;
   if (nonAnswer.test(trimmed)) return { blocked: true, reason: 'nonanswer' };
   return { blocked: false };
 }
 
-const GUARDRAIL_MESSAGE =
-  "Ju lutem, jepni një përgjigje pak më të detajuar që inteligjenca artificiale t'ju ndihmojë më mirë!";
-
-// ---------- Web Speech API hook ----------
-function useSpeechRecognition(
-  onFinal: (transcript: string) => void,
-  onInterim: (transcript: string) => void,
-) {
-  const [listening, setListening] = useState(false);
-  const [supported, setSupported] = useState(true);
-  const recognitionRef = useRef<any>(null);
-
-  useEffect(() => {
-    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) {
-      setSupported(false);
-      return;
-    }
-    const rec = new SR();
-    rec.continuous = false;
-    rec.interimResults = true;
-    rec.lang = 'sq-AL'; // Albanian; browsers fall back to en-US if unavailable
-    rec.onresult = (event: any) => {
-      let interim = '';
-      let final = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const t = event.results[i][0].transcript;
-        if (event.results[i].isFinal) final += t;
-        else interim += t;
-      }
-      if (interim) onInterim(interim);
-      if (final) onFinal(final);
-    };
-    rec.onend = () => setListening(false);
-    rec.onerror = () => setListening(false);
-    recognitionRef.current = rec;
-    return () => {
-      try { rec.stop(); } catch {}
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const start = (lang: string = 'sq-AL') => {
-    const rec = recognitionRef.current;
-    if (!rec) return;
-    try {
-      rec.lang = lang;
-      rec.start();
-      setListening(true);
-    } catch {
-      setListening(false);
-    }
-  };
-  const stop = () => {
-    const rec = recognitionRef.current;
-    if (!rec) return;
-    try { rec.stop(); } catch {}
-    setListening(false);
-  };
-
-  return { listening, supported, start, stop };
-}
+const guardrailMessage = () =>
+  getLanguage() === 'en'
+    ? 'Please give a slightly more detailed answer so the AI can help you better.'
+    : "Ju lutem, jepni një përgjigje pak më të detajuar që inteligjenca artificiale t'ju ndihmojë më mirë!";
 
 // ---------- STAR scaffold (neurodiversity mode) ----------
 const StarScaffold: React.FC = () => (
