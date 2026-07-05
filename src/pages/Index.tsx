@@ -217,7 +217,7 @@ const AnimatedUsageCounter: React.FC = () => {
 
   return (
     <p className="text-sm text-muted-foreground">
-      {count}+ studentë kanë përdorur Busullën
+      {count}+ {TRANSLATIONS.stats.title.toLowerCase().includes('used') ? 'students have used Digital Compass' : 'studentë kanë përdorur Busullën'}
     </p>
   );
 };
