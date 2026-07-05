@@ -193,6 +193,7 @@ const InteractiveCompass: React.FC<{ isRevealing?: boolean }> = ({ isRevealing }
 };
 
 const AnimatedUsageCounter: React.FC = () => {
+  const { lang } = useLanguage();
   const stored = parseInt(localStorage.getItem(USAGE_KEY) || String(USAGE_BASELINE), 10);
   const target = Math.max(stored, USAGE_BASELINE);
   const [count, setCount] = useState(0);
@@ -217,7 +218,7 @@ const AnimatedUsageCounter: React.FC = () => {
 
   return (
     <p className="text-sm text-muted-foreground">
-      {count}+ {TRANSLATIONS.stats.title.toLowerCase().includes('used') ? 'students have used Digital Compass' : 'studentë kanë përdorur Busullën'}
+      {count}+ {lang === 'en' ? 'students have used Digital Compass' : 'studentë kanë përdorur Busullën'}
     </p>
   );
 };
