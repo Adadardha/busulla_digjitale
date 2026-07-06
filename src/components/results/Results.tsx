@@ -165,7 +165,7 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
           <h4 className="text-lg md:text-xl font-bold mb-4 md:mb-6 uppercase tracking-wider">
             {TRANSLATIONS.results.roadmap}
           </h4>
-          {roadmapLoading && <LoadingSpinner text="Duke gjeneruar hartën e karrierës..." />}
+          {roadmapLoading && <LoadingSpinner text={lang === 'en' ? 'Generating your career roadmap...' : 'Duke gjeneruar hartën e karrierës...'} />}
           {roadmapError && <ErrorMessage message={TRANSLATIONS.common.error} onRetry={loadRoadmap} />}
           {roadmap && (
             <div className="space-y-4 md:space-y-6">
