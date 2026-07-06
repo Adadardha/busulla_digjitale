@@ -245,6 +245,9 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
               ))}
             </ul>
           </div>
+        )}
+
+
 
         {/* Core Action Plan — Missions */}
         <div className="mb-8 md:mb-12 p-5 md:p-6 brutalist-border bg-foreground/5">
