@@ -244,6 +244,12 @@ const Index: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isPrivacyGateOpen, setIsPrivacyGateOpen] = useState(false);
+  const [lowBandwidth, setLowBandwidth] = useState<boolean>(() => {
+    try { return localStorage.getItem('busulla-low-bandwidth') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('busulla-low-bandwidth', String(lowBandwidth)); } catch {}
+  }, [lowBandwidth]);
   const [chatSession, setChatSession] = useState<ChatSession>(() => {
     try {
       const saved = localStorage.getItem(CHAT_SESSION_KEY);
