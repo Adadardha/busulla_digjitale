@@ -19,7 +19,8 @@ import InterviewReport from '../components/interview/InterviewReport';
 import CareerAssistant from '../components/chat/CareerAssistant';
 import AboutModal from '../components/about/AboutModal';
 import PrivacyGate from '../components/PrivacyGate';
-import UsageStatsBanner, { recordQuizCompletion } from '../components/UsageStats';
+import { recordQuizCompletion } from '../components/UsageStats';
+import { Zap } from 'lucide-react';
 
 const CHAT_SESSION_KEY = 'busulla-chat-session';
 const PRIVACY_CONSENT_KEY = 'busulla-privacy-consent';
