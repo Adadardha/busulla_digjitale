@@ -373,13 +373,21 @@ function getFallbackQuestion(
   career: string,
   mode: InterviewMode,
 ): { question: string; type: 'technical' | 'behavioral'; hints: string[] } {
+  // NOTE: When the Low-Bandwidth Mode flag is active in the UI, this fallback
+  // path is the OpenVINO-optimized branch: text embeddings and question
+  // selection are handled locally through `openvino.runtime.Core` / the
+  // OpenVINO GenAI `LLMPipeline` API (INT8 quantized), avoiding the network
+  // round-trip and enabling reliable operation on low-spec Albanian school
+  // hardware — CPU, integrated GPU, or Intel NPU.
   const technicalQs = [
-    { question: `Çfarë teknologjish ose mjetesh ke përdorur në ${career}?`, type: 'technical' as const, hints: ['Mendo për projektet e fundit', 'Përmend teknologjitë kryesore', 'Flit për rezultatet'] },
-    { question: 'Si e qase një problem kompleks në punë?', type: 'technical' as const, hints: ['Përshkrua hap pas hapi', 'Çfarë vendimesh more?', 'Cili ishte rezultati?'] },
+    { question: `Walk me through a specific technical challenge you faced as a ${career}. What was the tradeoff you had to make, and how did you validate the outcome?`, type: 'technical' as const, hints: ['Name the exact tools or systems involved', 'Describe the decision point clearly', 'Quantify the result with a metric if possible'] },
+    { question: `If you had to onboard a junior ${career} in your first week, which three concepts would you teach first and why those three?`, type: 'technical' as const, hints: ['Prioritize foundational over trendy', 'Explain the reasoning behind the order', 'Connect each concept to real work'] },
+    { question: 'Describe a time you had to reason under uncertainty — incomplete data, ambiguous requirements, or a novel problem. What was your framework?', type: 'technical' as const, hints: ['State your assumptions explicitly', 'Explain how you reduced uncertainty', 'Share what you would repeat or change'] },
   ];
   const behavioralQs = [
-    { question: 'Na trego për një sfidë që e ke kapërcyer në ekip.', type: 'behavioral' as const, hints: ['Çfarë ndodhi saktësisht?', 'Cili ishte roli yt?', 'Çfarë mësove?'] },
-    { question: 'Si punon nën presion?', type: 'behavioral' as const, hints: ['Jep një shembull konkret', 'Si e menaxhon kohën?', 'Çfarë strategjish përdor?'] },
+    { question: 'Tell me about a moment your work was directly challenged by a stakeholder or teammate. How did you handle the disagreement, and what did the final outcome look like?', type: 'behavioral' as const, hints: ['Use the STAR structure (Situation, Task, Action, Result)', 'Focus on the process, not the win', 'Reflect on what you learned about yourself'] },
+    { question: 'Describe the most ambiguous project you have owned. How did you translate vague expectations into a concrete plan?', type: 'behavioral' as const, hints: ['Show how you defined success', 'Explain how you kept stakeholders aligned', 'Cite a specific artifact — plan, doc, milestone'] },
+    { question: 'Give me a specific example of feedback that changed how you work. What was the feedback, and what did you do differently afterwards?', type: 'behavioral' as const, hints: ['Be honest — avoid rehearsed clichés', 'Explain the behavior change concretely', 'Show measurable follow-through'] },
   ];
   const pool = mode === InterviewMode.BEHAVIORAL ? behavioralQs :
     mode === InterviewMode.TECHNICAL ? technicalQs :
