@@ -131,10 +131,10 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
           <div className="mb-8 md:mb-12">
             <div className="flex items-center gap-3 mb-4 md:mb-6">
               <h4 className="text-lg md:text-xl font-bold uppercase tracking-wider">
-                Analiza ML
+                {TRANSLATIONS.results.mlAnalysis}
               </h4>
               <span className="text-[10px] font-mono px-2 py-1 border border-border uppercase tracking-widest text-muted-foreground">
-                model lokal
+                {TRANSLATIONS.results.mlBadge}
               </span>
             </div>
             <div className="space-y-2 md:space-y-3">
