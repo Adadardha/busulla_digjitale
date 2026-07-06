@@ -436,6 +436,17 @@ const Index: React.FC = () => {
             <span className="mx-1 opacity-40">/</span>
             <span className={lang === 'al' ? 'font-bold' : 'opacity-40'}>AL</span>
           </button>
+          <button
+            onClick={() => setLowBandwidth(v => !v)}
+            aria-label="Low-Bandwidth Mode"
+            title="Low-Bandwidth Mode (Intel OpenVINO Optimization)"
+            className={`hidden md:inline-flex items-center gap-1.5 text-[10px] md:text-xs uppercase tracking-widest border px-3 py-2 transition-all font-mono ${
+              lowBandwidth ? 'border-accent text-accent bg-accent/10' : 'border-border hover:bg-foreground hover:text-background'
+            }`}
+          >
+            <Zap className="w-3 h-3" />
+            {lang === 'en' ? 'Low-BW' : 'Brez i Ulët'}
+          </button>
           <button onClick={() => setIsAboutOpen(true)} className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all">
             {TRANSLATIONS.nav.about}
           </button>
