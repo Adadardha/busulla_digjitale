@@ -15,9 +15,11 @@ interface ResultsProps {
 }
 
 const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartInterview, onRetakeQuiz }) => {
+  const { lang } = useLanguage();
   const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
   const [roadmapError, setRoadmapError] = useState(false);
+  const [missionsDone, setMissionsDone] = useState<boolean[]>([false, false, false]);
 
   const loadRoadmap = async () => {
     setRoadmapLoading(true);
