@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import { BookOpen, GraduationCap, TrendingUp, Banknote, BarChart3 } from 'lucide-react';
+import { BookOpen, GraduationCap, TrendingUp, Banknote, BarChart3, CheckCircle2, Circle, Radar, Target } from 'lucide-react';
 import { PredictionResult, CareerRoadmap } from '../../types';
-import { TRANSLATIONS } from '../../i18n';
+import { TRANSLATIONS, useLanguage } from '../../i18n';
 import { generateCareerRoadmap } from '../../services/gemini';
 import { LoadingSpinner, ErrorMessage } from '../Decorations';
 
