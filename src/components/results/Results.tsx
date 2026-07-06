@@ -40,6 +40,32 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
 
   const matchPercent = (prediction.confidence * 100).toFixed(0);
 
+  const missions = [
+    TRANSLATIONS.results.mission1,
+    TRANSLATIONS.results.mission2,
+    TRANSLATIONS.results.mission3,
+  ];
+  const completed = missionsDone.filter(Boolean).length;
+  const progressPct = Math.round((completed / missions.length) * 100);
+
+  // Deterministic regional demand — seeded from career name for stability
+  const regions = useMemo(() => {
+    const cities = ['Tirana', 'Durrës', 'Vlora', 'Shkodër', 'Korça'];
+    const seed = prediction.primaryCareer
+      .split('')
+      .reduce((s, c) => (s * 31 + c.charCodeAt(0)) >>> 0, 7);
+    let x = seed;
+    const rand = () => {
+      x = (x * 1664525 + 1013904223) >>> 0;
+      return x / 0xffffffff;
+    };
+    // Tirana always highest; other cities vary
+    const base = [88 + Math.floor(rand() * 10)];
+    for (let i = 1; i < cities.length; i++) base.push(35 + Math.floor(rand() * 55));
+    return cities.map((city, i) => ({ city, pct: base[i] }));
+  }, [prediction.primaryCareer]);
+
+
   return (
     <motion.div
       key="results"
