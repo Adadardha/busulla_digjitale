@@ -477,6 +477,19 @@ const Index: React.FC = () => {
                 {lang === 'en' ? 'Career orientation · powered by AI' : 'Orientim karriere · i mundësuar nga AI'}
               </motion.div>
 
+              {lowBandwidth && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative z-10 inline-flex items-center gap-2 border border-accent/40 bg-accent/10 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs tracking-wide text-accent"
+                >
+                  <Zap className="w-3 h-3" />
+                  {lang === 'en'
+                    ? 'System configured for local hardware acceleration. Optimizing text embeddings to minimize network strain.'
+                    : 'Sistemi i konfiguruar për përshpejtim lokal të harduerit. Duke optimizuar embeddings-et për të minimizuar trafikun në rrjet.'}
+                </motion.div>
+              )}
+
               <ASCIIHeader />
 
               <div className="space-y-4 md:space-y-6 relative z-10">
