@@ -245,7 +245,96 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
               ))}
             </ul>
           </div>
-        )}
+
+        {/* Core Action Plan — Missions */}
+        <div className="mb-8 md:mb-12 p-5 md:p-6 brutalist-border bg-foreground/5">
+          <div className="flex items-center gap-3 mb-4">
+            <Target className="w-4 h-4 text-accent" />
+            <h4 className="text-lg md:text-xl font-bold uppercase tracking-wider">
+              {TRANSLATIONS.results.missionsTitle}
+            </h4>
+          </div>
+          <p className="text-xs md:text-sm text-muted-foreground mb-4">
+            {TRANSLATIONS.results.missionsSubtitle}
+          </p>
+          <div className="mb-5">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-[10px] md:text-xs uppercase tracking-widest text-muted-foreground">
+                {TRANSLATIONS.results.progressLabel}
+              </span>
+              <span className="text-xs font-mono font-bold text-accent">{progressPct}%</span>
+            </div>
+            <div className="h-2 bg-muted overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-accent to-foreground"
+                initial={false}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+              />
+            </div>
+          </div>
+          <ul className="space-y-2">
+            {missions.map((m, i) => {
+              const done = missionsDone[i];
+              return (
+                <li key={i}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMissionsDone(prev => prev.map((v, j) => (j === i ? !v : v)))
+                    }
+                    className={`w-full flex items-center gap-3 p-3 md:p-4 border transition-all text-left ${
+                      done
+                        ? 'border-accent/50 bg-accent/5'
+                        : 'border-border hover:border-foreground/40 hover:bg-foreground/5'
+                    }`}
+                  >
+                    {done ? (
+                      <CheckCircle2 className="w-5 h-5 text-accent shrink-0" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-muted-foreground shrink-0" />
+                    )}
+                    <span className={`text-sm md:text-base ${done ? 'line-through text-muted-foreground' : ''}`}>
+                      {m}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
+        {/* Regional Opportunity Radar */}
+        <div className="mb-8 md:mb-12 p-5 md:p-6 brutalist-border bg-foreground/5">
+          <div className="flex items-center gap-3 mb-2">
+            <Radar className="w-4 h-4 text-accent" />
+            <h4 className="text-lg md:text-xl font-bold uppercase tracking-wider">
+              {TRANSLATIONS.results.radarTitle}
+            </h4>
+          </div>
+          <p className="text-xs md:text-sm text-muted-foreground mb-5">
+            {TRANSLATIONS.results.radarSubtitle}
+          </p>
+          <div className="space-y-3">
+            {regions.map((r, i) => (
+              <div key={r.city} className="flex items-center gap-3">
+                <span className="w-20 md:w-24 text-xs md:text-sm font-mono uppercase tracking-widest text-muted-foreground">
+                  {r.city}
+                </span>
+                <div className="flex-1 h-2.5 bg-muted overflow-hidden">
+                  <motion.div
+                    className={`h-full ${r.pct >= 75 ? 'bg-accent' : r.pct >= 50 ? 'bg-foreground' : 'bg-foreground/40'}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${r.pct}%` }}
+                    transition={{ duration: 0.7, delay: i * 0.08, ease: 'easeOut' }}
+                  />
+                </div>
+                <span className="w-12 text-right text-xs font-mono font-bold">{r.pct}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
 
         {/* QR Code */}
         <div className="mb-8 md:mb-12 p-6 brutalist-border bg-foreground/5 text-center">
