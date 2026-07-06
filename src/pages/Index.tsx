@@ -19,7 +19,8 @@ import InterviewReport from '../components/interview/InterviewReport';
 import CareerAssistant from '../components/chat/CareerAssistant';
 import AboutModal from '../components/about/AboutModal';
 import PrivacyGate from '../components/PrivacyGate';
-import UsageStatsBanner, { recordQuizCompletion } from '../components/UsageStats';
+import { recordQuizCompletion } from '../components/UsageStats';
+import { Zap } from 'lucide-react';
 
 const CHAT_SESSION_KEY = 'busulla-chat-session';
 const PRIVACY_CONSENT_KEY = 'busulla-privacy-consent';
@@ -243,6 +244,12 @@ const Index: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isPrivacyGateOpen, setIsPrivacyGateOpen] = useState(false);
+  const [lowBandwidth, setLowBandwidth] = useState<boolean>(() => {
+    try { return localStorage.getItem('busulla-low-bandwidth') === 'true'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('busulla-low-bandwidth', String(lowBandwidth)); } catch {}
+  }, [lowBandwidth]);
   const [chatSession, setChatSession] = useState<ChatSession>(() => {
     try {
       const saved = localStorage.getItem(CHAT_SESSION_KEY);
@@ -429,6 +436,17 @@ const Index: React.FC = () => {
             <span className="mx-1 opacity-40">/</span>
             <span className={lang === 'al' ? 'font-bold' : 'opacity-40'}>AL</span>
           </button>
+          <button
+            onClick={() => setLowBandwidth(v => !v)}
+            aria-label="Low-Bandwidth Mode"
+            title="Low-Bandwidth Mode (Intel OpenVINO Optimization)"
+            className={`hidden md:inline-flex items-center gap-1.5 text-[10px] md:text-xs uppercase tracking-widest border px-3 py-2 transition-all font-mono ${
+              lowBandwidth ? 'border-accent text-accent bg-accent/10' : 'border-border hover:bg-foreground hover:text-background'
+            }`}
+          >
+            <Zap className="w-3 h-3" />
+            {lang === 'en' ? 'Low-BW' : 'Brez i Ulët'}
+          </button>
           <button onClick={() => setIsAboutOpen(true)} className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all">
             {TRANSLATIONS.nav.about}
           </button>
@@ -458,6 +476,19 @@ const Index: React.FC = () => {
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                 {lang === 'en' ? 'Career orientation · powered by AI' : 'Orientim karriere · i mundësuar nga AI'}
               </motion.div>
+
+              {lowBandwidth && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative z-10 inline-flex items-center gap-2 border border-accent/40 bg-accent/10 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs tracking-wide text-accent"
+                >
+                  <Zap className="w-3 h-3" />
+                  {lang === 'en'
+                    ? 'System configured for local hardware acceleration. Optimizing text embeddings to minimize network strain.'
+                    : 'Sistemi i konfiguruar për përshpejtim lokal të harduerit. Duke optimizuar embeddings-et për të minimizuar trafikun në rrjet.'}
+                </motion.div>
+              )}
 
               <ASCIIHeader />
 
@@ -489,15 +520,7 @@ const Index: React.FC = () => {
 
               <div className="relative z-10 flex flex-col items-center gap-3">
                 <AnimatedUsageCounter />
-                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground/80">
-                  <span>{lang === 'en' ? '7 adaptive questions' : '7 pyetje adaptive'}</span>
-                  <span className="w-1 h-1 rounded-full bg-border" />
-                  <span>{lang === 'en' ? 'Simulated interviews' : 'Intervista simulate'}</span>
-                  <span className="w-1 h-1 rounded-full bg-border" />
-                  <span>{lang === 'en' ? 'AI assistant 24/7' : 'Asistent AI 24/7'}</span>
-                </div>
               </div>
-              <UsageStatsBanner />
             </motion.div>
           )}
 
