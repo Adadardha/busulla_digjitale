@@ -490,15 +490,7 @@ const Index: React.FC = () => {
 
               <div className="relative z-10 flex flex-col items-center gap-3">
                 <AnimatedUsageCounter />
-                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[10px] md:text-xs uppercase tracking-[0.2em] text-muted-foreground/80">
-                  <span>{lang === 'en' ? '7 adaptive questions' : '7 pyetje adaptive'}</span>
-                  <span className="w-1 h-1 rounded-full bg-border" />
-                  <span>{lang === 'en' ? 'Simulated interviews' : 'Intervista simulate'}</span>
-                  <span className="w-1 h-1 rounded-full bg-border" />
-                  <span>{lang === 'en' ? 'AI assistant 24/7' : 'Asistent AI 24/7'}</span>
-                </div>
               </div>
-              <UsageStatsBanner />
             </motion.div>
           )}
 
