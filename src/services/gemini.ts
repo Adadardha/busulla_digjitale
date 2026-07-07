@@ -701,7 +701,7 @@ export const getHint = async (question: string, career: string): Promise<string>
 
   try {
     const text = await callGemini(
-      `Ti je mentor karriere. Për pyetjen: "${question}" në kontekstin e karrierës ${career}, jep një hint të shkurtër në shqip që ndihmon kandidatin pa zbuluar përgjigjen. Vetëm 1-2 fjali. Mos përdor emoji.`
+      `${languageDirective()}\n\nYou are a career mentor. For the question: "${question}" in the context of the career ${career}, give a short hint (1-2 sentences) that helps the candidate without revealing the answer. Do not use emoji.`
     );
     return text || 'Mendo për përvojat tua të mëparshme dhe si mund të zbatohen këtu.';
   } catch {
