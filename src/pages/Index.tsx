@@ -295,19 +295,19 @@ const Index: React.FC = () => {
   }, [chatSession]);
 
   const handleStartClick = () => {
-    // Show privacy gate on first run only
-    const hasConsented = localStorage.getItem(PRIVACY_CONSENT_KEY) === 'true';
-    if (hasConsented) {
-      setCurrentStep(AppState.QUIZ);
-    } else {
-      setIsPrivacyGateOpen(true);
-    }
+    // Always route the user through the Responsible AI disclosure step
+    // before the quiz. If they've already consented previously, we still
+    // show it as a fast confirmation screen — it's part of the flow.
+    setCurrentStep(AppState.ETHICAL_DISCLOSURE);
   };
 
   const handlePrivacyAgree = () => {
     localStorage.setItem(PRIVACY_CONSENT_KEY, 'true');
-    setIsPrivacyGateOpen(false);
     setCurrentStep(AppState.QUIZ);
+  };
+
+  const handlePrivacyCancel = () => {
+    setCurrentStep(AppState.LANDING);
   };
 
   const processResults = async (finalAnswers: QuizAnswer[]) => {
