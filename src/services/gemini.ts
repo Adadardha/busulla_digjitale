@@ -136,7 +136,7 @@ Kthe VETËM JSON të vlefshëm, pa asnjë tekst tjetër:
 {
   "primaryCareer": "${localResult.primaryCareer}",
   "confidence": ${localResult.confidence},
-  "description": "shkruaj 2-3 fjali në shqip pse kjo karrierë i përshtatet personit bazuar në përgjigjet",
+  "description": "2-3 sentences explaining why this career fits the person based on their answers (write in the OUTPUT LANGUAGE specified above)",
   "alternatives": [
     {"career": "${localResult.alternatives[0]?.career || ''}", "confidence": ${localResult.alternatives[0]?.confidence || 0.5}, "description": "pse kjo alternativë"},
     {"career": "${localResult.alternatives[1]?.career || ''}", "confidence": ${localResult.alternatives[1]?.confidence || 0.4}, "description": "pse kjo alternativë"}
