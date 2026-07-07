@@ -492,7 +492,7 @@ const Index: React.FC = () => {
       <main className="relative flex flex-col items-center justify-center min-h-screen px-4 md:px-6 lg:px-8 pt-20 md:pt-24 pb-20 gap-6">
         <AnimatePresence mode="wait">
           {currentStep === AppState.LANDING && (
-            <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl w-full text-center space-y-8 md:space-y-12 relative z-10">
+            <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-6xl min-h-[80vh] flex flex-col justify-between items-center text-center relative z-10 gap-8 md:gap-12 py-6 md:py-10">
               <div className="aurora-bg" aria-hidden="true">
                 <div className="aurora-orb" />
               </div>
@@ -505,19 +505,17 @@ const Index: React.FC = () => {
                 className="relative z-10 inline-flex items-center gap-2 border border-border/60 bg-background/40 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                {lang === 'en' ? 'Career orientation · powered by AI' : 'Orientim karriere · i mundësuar nga AI'}
+                {UI_CONTENT[lang].badge}
               </motion.div>
 
               {lowBandwidth && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative z-10 inline-flex items-center gap-2 border border-accent/40 bg-accent/10 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs tracking-wide text-accent"
+                  className="relative z-10 inline-flex items-center gap-2 border border-accent/40 bg-accent/10 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs tracking-wide text-accent max-w-3xl"
                 >
-                  <Zap className="w-3 h-3" />
-                  {lang === 'en'
-                    ? 'System configured for local hardware acceleration. Optimizing text embeddings to minimize network strain.'
-                    : 'Sistemi i konfiguruar për përshpejtim lokal të harduerit. Duke optimizuar embeddings-et për të minimizuar trafikun në rrjet.'}
+                  <Zap className="w-3 h-3 shrink-0" />
+                  {UI_CONTENT[lang].lowBwDescription}
                 </motion.div>
               )}
 
