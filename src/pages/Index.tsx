@@ -454,7 +454,7 @@ const Index: React.FC = () => {
             <polygon points="26,14 18,12 20,14 18,16" fill="hsl(var(--foreground))" opacity="0.4" />
             <polygon points="2,14 10,12 8,14 10,16" fill="hsl(var(--foreground))" opacity="0.4" />
           </svg>
-          <span className="font-heading font-bold text-base md:text-lg tracking-tighter uppercase leading-none">Busulla</span>
+          <span className="font-heading font-bold text-base md:text-lg tracking-tighter uppercase leading-none">{UI_CONTENT[lang].brand}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
