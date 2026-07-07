@@ -555,6 +555,10 @@ const Index: React.FC = () => {
           )}
 
 
+          {currentStep === AppState.ETHICAL_DISCLOSURE && (
+            <PrivacyGate key="ethical" onAgree={handlePrivacyAgree} onCancel={handlePrivacyCancel} />
+          )}
+
           {currentStep === AppState.QUIZ && (
             <Quiz key="quiz" onComplete={processResults} />
           )}
