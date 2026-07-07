@@ -646,7 +646,9 @@ export const generateInterviewReport = async (
 Studenti ka aktivizuar Modalitetin Gjithëpërfshirës (Neurodiversity). Fokuso rekomandimet te qëndrueshmëria arkitektonike, jo te kliçetë sjellorë.
 Shto edhe fushën "idealWorkEnvironment": 4 elementë të mjedisit ideal të punës (p.sh. fokus-heavy, sensory-friendly, asinkronë).` : '';
 
-  const summaryPrompt = `Gjenero një raport përfundimtar për intervistën.
+  const summaryPrompt = `${languageDirective()}
+
+Gjenero një raport përfundimtar për intervistën.
 
 Pozicioni: ${session.career}
 Rezultati i përgjithshëm: ${session.overallScore}/100
