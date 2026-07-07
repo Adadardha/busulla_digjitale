@@ -219,10 +219,41 @@ const AnimatedUsageCounter: React.FC = () => {
 
   return (
     <p className="text-sm text-muted-foreground">
-      {count}+ {lang === 'en' ? 'students have used Digital Compass' : 'studentë kanë përdorur Busullën'}
+      {count}+ {UI_CONTENT[lang].usageSuffix}
     </p>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Centralized UI dictionary — strict separation of markup from copy so the
+// EN/AL toggle can never leak strings across states. Every visible string
+// used directly inside this file's JSX must have a parallel key in both
+// dictionaries below.
+// ---------------------------------------------------------------------------
+const UI_CONTENT = {
+  en: {
+    badge: 'Career orientation · powered by AI',
+    lowBwLabel: 'Low-BW',
+    lowBwDescription:
+      'System configured for local hardware acceleration. Optimizing text embeddings to minimize network strain.',
+    usageSuffix: 'students have used Digital Compass',
+    toggleLangAria: 'Toggle language',
+    lowBwAria: 'Low-Bandwidth Mode',
+    lowBwTitle: 'Low-Bandwidth Mode (Intel OpenVINO Optimization)',
+    brand: 'Compass',
+  },
+  al: {
+    badge: 'Orientim karriere · i mundësuar nga AI',
+    lowBwLabel: 'Brez i Ulët',
+    lowBwDescription:
+      'Sistemi i konfiguruar për përshpejtim lokal të harduerit. Duke optimizuar embeddings-et për të minimizuar trafikun në rrjet.',
+    usageSuffix: 'studentë kanë përdorur Busullën',
+    toggleLangAria: 'Ndrysho gjuhën',
+    lowBwAria: 'Modaliteti me brez të ulët',
+    lowBwTitle: 'Modaliteti me brez të ulët (Optimizim me Intel OpenVINO)',
+    brand: 'Busulla',
+  },
+} as const;
 
 const Index: React.FC = () => {
   const { lang, setLang } = useLanguage();
