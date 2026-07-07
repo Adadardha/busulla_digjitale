@@ -219,10 +219,41 @@ const AnimatedUsageCounter: React.FC = () => {
 
   return (
     <p className="text-sm text-muted-foreground">
-      {count}+ {lang === 'en' ? 'students have used Digital Compass' : 'studentë kanë përdorur Busullën'}
+      {count}+ {UI_CONTENT[lang].usageSuffix}
     </p>
   );
 };
+
+// ---------------------------------------------------------------------------
+// Centralized UI dictionary — strict separation of markup from copy so the
+// EN/AL toggle can never leak strings across states. Every visible string
+// used directly inside this file's JSX must have a parallel key in both
+// dictionaries below.
+// ---------------------------------------------------------------------------
+const UI_CONTENT = {
+  en: {
+    badge: 'Career orientation · powered by AI',
+    lowBwLabel: 'Low-BW',
+    lowBwDescription:
+      'System configured for local hardware acceleration. Optimizing text embeddings to minimize network strain.',
+    usageSuffix: 'students have used Digital Compass',
+    toggleLangAria: 'Toggle language',
+    lowBwAria: 'Low-Bandwidth Mode',
+    lowBwTitle: 'Low-Bandwidth Mode (Intel OpenVINO Optimization)',
+    brand: 'Compass',
+  },
+  al: {
+    badge: 'Orientim karriere · i mundësuar nga AI',
+    lowBwLabel: 'Brez i Ulët',
+    lowBwDescription:
+      'Sistemi i konfiguruar për përshpejtim lokal të harduerit. Duke optimizuar embeddings-et për të minimizuar trafikun në rrjet.',
+    usageSuffix: 'studentë kanë përdorur Busullën',
+    toggleLangAria: 'Ndrysho gjuhën',
+    lowBwAria: 'Modaliteti me brez të ulët',
+    lowBwTitle: 'Modaliteti me brez të ulët (Optimizim me Intel OpenVINO)',
+    brand: 'Busulla',
+  },
+} as const;
 
 const Index: React.FC = () => {
   const { lang, setLang } = useLanguage();
@@ -423,13 +454,13 @@ const Index: React.FC = () => {
             <polygon points="26,14 18,12 20,14 18,16" fill="hsl(var(--foreground))" opacity="0.4" />
             <polygon points="2,14 10,12 8,14 10,16" fill="hsl(var(--foreground))" opacity="0.4" />
           </svg>
-          <span className="font-heading font-bold text-base md:text-lg tracking-tighter uppercase leading-none">Busulla</span>
+          <span className="font-heading font-bold text-base md:text-lg tracking-tighter uppercase leading-none">{UI_CONTENT[lang].brand}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setLang(lang === 'en' ? 'al' : 'en')}
-            aria-label="Toggle language"
-            title="Toggle language"
+            aria-label={UI_CONTENT[lang].toggleLangAria}
+            title={UI_CONTENT[lang].toggleLangAria}
             className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all font-mono"
           >
             <span className={lang === 'en' ? 'font-bold' : 'opacity-40'}>EN</span>
@@ -438,14 +469,14 @@ const Index: React.FC = () => {
           </button>
           <button
             onClick={() => setLowBandwidth(v => !v)}
-            aria-label="Low-Bandwidth Mode"
-            title="Low-Bandwidth Mode (Intel OpenVINO Optimization)"
+            aria-label={UI_CONTENT[lang].lowBwAria}
+            title={UI_CONTENT[lang].lowBwTitle}
             className={`hidden md:inline-flex items-center gap-1.5 text-[10px] md:text-xs uppercase tracking-widest border px-3 py-2 transition-all font-mono ${
               lowBandwidth ? 'border-accent text-accent bg-accent/10' : 'border-border hover:bg-foreground hover:text-background'
             }`}
           >
             <Zap className="w-3 h-3" />
-            {lang === 'en' ? 'Low-BW' : 'Brez i Ulët'}
+            {UI_CONTENT[lang].lowBwLabel}
           </button>
           <button onClick={() => setIsAboutOpen(true)} className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all">
             {TRANSLATIONS.nav.about}
@@ -461,7 +492,7 @@ const Index: React.FC = () => {
       <main className="relative flex flex-col items-center justify-center min-h-screen px-4 md:px-6 lg:px-8 pt-20 md:pt-24 pb-20 gap-6">
         <AnimatePresence mode="wait">
           {currentStep === AppState.LANDING && (
-            <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-4xl w-full text-center space-y-8 md:space-y-12 relative z-10">
+            <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-6xl min-h-[80vh] flex flex-col justify-between items-center text-center relative z-10 gap-8 md:gap-12 py-6 md:py-10">
               <div className="aurora-bg" aria-hidden="true">
                 <div className="aurora-orb" />
               </div>
@@ -474,19 +505,17 @@ const Index: React.FC = () => {
                 className="relative z-10 inline-flex items-center gap-2 border border-border/60 bg-background/40 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs uppercase tracking-[0.25em] text-muted-foreground"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                {lang === 'en' ? 'Career orientation · powered by AI' : 'Orientim karriere · i mundësuar nga AI'}
+                {UI_CONTENT[lang].badge}
               </motion.div>
 
               {lowBandwidth && (
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative z-10 inline-flex items-center gap-2 border border-accent/40 bg-accent/10 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs tracking-wide text-accent"
+                  className="relative z-10 inline-flex items-center gap-2 border border-accent/40 bg-accent/10 backdrop-blur-sm px-4 py-1.5 text-[10px] md:text-xs tracking-wide text-accent max-w-3xl"
                 >
-                  <Zap className="w-3 h-3" />
-                  {lang === 'en'
-                    ? 'System configured for local hardware acceleration. Optimizing text embeddings to minimize network strain.'
-                    : 'Sistemi i konfiguruar për përshpejtim lokal të harduerit. Duke optimizuar embeddings-et për të minimizuar trafikun në rrjet.'}
+                  <Zap className="w-3 h-3 shrink-0" />
+                  {UI_CONTENT[lang].lowBwDescription}
                 </motion.div>
               )}
 

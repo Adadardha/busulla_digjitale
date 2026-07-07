@@ -35,6 +35,20 @@ import {
   ChatMessage,
 } from '../types';
 import { classifyToPrediction } from './classifier';
+import { getLanguage } from '../i18n';
+
+/**
+ * Returns the current UI language directive for LLM prompts. The AI must
+ * strictly obey this — every question, feedback string, summary, and
+ * roadmap MUST be written in the exact language the user has selected in
+ * the UI. This eliminates language leakage across the EN/AL toggle.
+ */
+function languageDirective(): string {
+  const lang = getLanguage();
+  return lang === 'en'
+    ? 'OUTPUT LANGUAGE: Respond EXCLUSIVELY in professional, native English. Do NOT emit any Albanian words or phrases under any circumstances.'
+    : 'OUTPUT LANGUAGE: Respond EXCLUSIVELY in fluent, native Albanian (shqip). Do NOT emit any English words or phrases except unavoidable technical proper nouns.';
+}
 
 // Config
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -109,7 +123,9 @@ export const predictCareer = async (answers: QuizAnswer[]): Promise<PredictionRe
 
   const answersText = answers.map((a, i) => `${i + 1}. ${a.answer}`).join('\n');
 
-  const prompt = `Bazuar në këto përgjigje të kuizit të karrierës, analizo dhe kthe një objekt JSON.
+  const prompt = `${languageDirective()}
+
+Bazuar në këto përgjigje të kuizit të karrierës, analizo dhe kthe një objekt JSON.
 Karriera kryesore sipas analizës: ${localResult.primaryCareer}
 Alternativat: ${localResult.alternatives.map(a => a.career).join(', ')}
 
@@ -120,7 +136,7 @@ Kthe VETËM JSON të vlefshëm, pa asnjë tekst tjetër:
 {
   "primaryCareer": "${localResult.primaryCareer}",
   "confidence": ${localResult.confidence},
-  "description": "shkruaj 2-3 fjali në shqip pse kjo karrierë i përshtatet personit bazuar në përgjigjet",
+  "description": "2-3 sentences explaining why this career fits the person based on their answers (write in the OUTPUT LANGUAGE specified above)",
   "alternatives": [
     {"career": "${localResult.alternatives[0]?.career || ''}", "confidence": ${localResult.alternatives[0]?.confidence || 0.5}, "description": "pse kjo alternativë"},
     {"career": "${localResult.alternatives[1]?.career || ''}", "confidence": ${localResult.alternatives[1]?.confidence || 0.4}, "description": "pse kjo alternativë"}
@@ -273,7 +289,9 @@ export const generateCareerRoadmap = async (career: string): Promise<CareerRoadm
 
   if (!GEMINI_API_KEY) return fallback;
 
-  const prompt = `Për karrierën "${career}" në Shqipëri, kthe VETËM JSON valid me tri trajektore lokale që mbështesin akses demokratik jashtë Tiranës:
+  const prompt = `${languageDirective()}
+
+Për karrierën "${career}" në Shqipëri, kthe VETËM JSON valid me tri trajektore lokale që mbështesin akses demokratik jashtë Tiranës:
 {
   "subjects": ["5 lëndë gjimnazi relevante"],
   "universities": ["3-5 universitete/fakultete shqiptare"],
@@ -334,7 +352,9 @@ export const generateDynamicQuestion = async (
 INCLUSION MODE (Neurodiversity Support) — ACTIVE:
 Strip ambiguous corporate idioms and open-ended buzzwords. Frame every scenario concretely. Split complex prompts into clear numbered sub-parts (a, b, c). Prioritize technical and logical focus. Replace metaphors like "sell yourself" or "biggest weakness" with concrete task-based framings.` : '';
 
-    const prompt = `You are an elite, empathetic Talent Acquisition Director specialized in modern tech, digital, and creative industry roles. You are conducting a live interview for the position: ${career}.
+    const prompt = `${languageDirective()}
+
+You are an elite, empathetic Talent Acquisition Director specialized in modern tech, digital, and creative industry roles. You are conducting a live interview for the position: ${career}.
 
 Interview mode: ${modeDescriptions[mode]}
 Difficulty level: ${difficultyContext[difficulty]}
@@ -415,7 +435,9 @@ export const evaluateAnswerWithFeedback = async (
 MODALITETI GJITHËPËRFSHIRËS (NEURODIVERSITY SUPPORT MODE) — I AKTIVIZUAR:
 Fokuso vlerësimin te qëndrueshmëria arkitektonike dhe shprehja objektive e aftësive teknike/logjike, jo te kliçetë sjellorë ("passion", "team spirit", kontakti me sy). NUK duhet të penalizosh mungesën e gjuhës sociale-korporative. Vlerëso: qartësinë strukturore, saktësinë faktike, dhe zbatueshmërinë teknike. Nëse përgjigjja është e strukturuar sipas metodës STAR (Situata / Detyra / Veprimi / Rezultati), lëvdo strukturën.` : '';
 
-    const prompt = `You are an elite, empathetic Talent Acquisition Director evaluating a live interview response for the position of ${career}. You give precise, actionable, specific feedback — never generic compliments.
+    const prompt = `${languageDirective()}
+
+You are an elite, empathetic Talent Acquisition Director evaluating a live interview response for the position of ${career}. You give precise, actionable, specific feedback — never generic compliments.
 
 Question: ${question}
 Candidate response: "${answer}"
@@ -624,7 +646,9 @@ export const generateInterviewReport = async (
 Studenti ka aktivizuar Modalitetin Gjithëpërfshirës (Neurodiversity). Fokuso rekomandimet te qëndrueshmëria arkitektonike, jo te kliçetë sjellorë.
 Shto edhe fushën "idealWorkEnvironment": 4 elementë të mjedisit ideal të punës (p.sh. fokus-heavy, sensory-friendly, asinkronë).` : '';
 
-  const summaryPrompt = `Gjenero një raport përfundimtar për intervistën.
+  const summaryPrompt = `${languageDirective()}
+
+Gjenero një raport përfundimtar për intervistën.
 
 Pozicioni: ${session.career}
 Rezultati i përgjithshëm: ${session.overallScore}/100
@@ -635,7 +659,7 @@ Fusha të forta: ${session.strongAreas.join(', ') || 'Asnjë'}${neurodivergentBl
 You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.
 
 {
-  "summary": "Përmbledhje në 2-3 fjali në shqip",
+  "summary": "2-3 sentence summary (write in the OUTPUT LANGUAGE specified above)",
   "recommendations": ["rekomandim 1", "rekomandim 2", "rekomandim 3"],
   "weakTopics": ["temë e dobët 1", "temë e dobët 2"],
   "practiceSuggestions": ["sugjerim praktike 1", "sugjerim 2"]${session.neurodivergent ? ',\n  "idealWorkEnvironment": ["mjedis 1", "mjedis 2", "mjedis 3", "mjedis 4"]' : ''}
@@ -677,7 +701,7 @@ export const getHint = async (question: string, career: string): Promise<string>
 
   try {
     const text = await callGemini(
-      `Ti je mentor karriere. Për pyetjen: "${question}" në kontekstin e karrierës ${career}, jep një hint të shkurtër në shqip që ndihmon kandidatin pa zbuluar përgjigjen. Vetëm 1-2 fjali. Mos përdor emoji.`
+      `${languageDirective()}\n\nYou are a career mentor. For the question: "${question}" in the context of the career ${career}, give a short hint (1-2 sentences) that helps the candidate without revealing the answer. Do not use emoji.`
     );
     return text || 'Mendo për përvojat tua të mëparshme dhe si mund të zbatohen këtu.';
   } catch {
