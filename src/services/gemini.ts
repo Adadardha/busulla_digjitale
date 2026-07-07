@@ -659,7 +659,7 @@ Fusha të forta: ${session.strongAreas.join(', ') || 'Asnjë'}${neurodivergentBl
 You MUST return valid JSON only. No markdown, no explanation, no code fences, no extra text. Just the raw JSON object starting with { and ending with }.
 
 {
-  "summary": "Përmbledhje në 2-3 fjali në shqip",
+  "summary": "2-3 sentence summary (write in the OUTPUT LANGUAGE specified above)",
   "recommendations": ["rekomandim 1", "rekomandim 2", "rekomandim 3"],
   "weakTopics": ["temë e dobët 1", "temë e dobët 2"],
   "practiceSuggestions": ["sugjerim praktike 1", "sugjerim 2"]${session.neurodivergent ? ',\n  "idealWorkEnvironment": ["mjedis 1", "mjedis 2", "mjedis 3", "mjedis 4"]' : ''}
