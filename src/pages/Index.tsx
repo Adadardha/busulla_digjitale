@@ -274,7 +274,8 @@ const Index: React.FC = () => {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
-  const [isPrivacyGateOpen, setIsPrivacyGateOpen] = useState(false);
+  // Ethical disclosure is now a dedicated step (AppState.ETHICAL_DISCLOSURE),
+  // not a modal — no local open/close flag needed.
   const [lowBandwidth, setLowBandwidth] = useState<boolean>(() => {
     try { return localStorage.getItem('busulla-low-bandwidth') === 'true'; } catch { return false; }
   });
