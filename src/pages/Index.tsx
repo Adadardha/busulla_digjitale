@@ -599,11 +599,6 @@ const Index: React.FC = () => {
         <CareerAssistant isOpen={isChatOpen} onToggle={() => setIsChatOpen(!isChatOpen)} session={chatSession} onSessionUpdate={setChatSession} careerContext={prediction?.primaryCareer} weakAreas={interviewSession?.weakAreas} />
       )}
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
-      <PrivacyGate
-        isOpen={isPrivacyGateOpen}
-        onAgree={handlePrivacyAgree}
-        onCancel={() => setIsPrivacyGateOpen(false)}
-      />
     </div>
   );
 };
