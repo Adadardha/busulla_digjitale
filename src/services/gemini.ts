@@ -123,7 +123,9 @@ export const predictCareer = async (answers: QuizAnswer[]): Promise<PredictionRe
 
   const answersText = answers.map((a, i) => `${i + 1}. ${a.answer}`).join('\n');
 
-  const prompt = `Bazuar në këto përgjigje të kuizit të karrierës, analizo dhe kthe një objekt JSON.
+  const prompt = `${languageDirective()}
+
+Bazuar në këto përgjigje të kuizit të karrierës, analizo dhe kthe një objekt JSON.
 Karriera kryesore sipas analizës: ${localResult.primaryCareer}
 Alternativat: ${localResult.alternatives.map(a => a.career).join(', ')}
 
