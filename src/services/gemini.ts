@@ -289,7 +289,9 @@ export const generateCareerRoadmap = async (career: string): Promise<CareerRoadm
 
   if (!GEMINI_API_KEY) return fallback;
 
-  const prompt = `Për karrierën "${career}" në Shqipëri, kthe VETËM JSON valid me tri trajektore lokale që mbështesin akses demokratik jashtë Tiranës:
+  const prompt = `${languageDirective()}
+
+Për karrierën "${career}" në Shqipëri, kthe VETËM JSON valid me tri trajektore lokale që mbështesin akses demokratik jashtë Tiranës:
 {
   "subjects": ["5 lëndë gjimnazi relevante"],
   "universities": ["3-5 universitete/fakultete shqiptare"],
