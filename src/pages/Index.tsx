@@ -274,7 +274,8 @@ const Index: React.FC = () => {
 
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
-  const [isPrivacyGateOpen, setIsPrivacyGateOpen] = useState(false);
+  // Ethical disclosure is now a dedicated step (AppState.ETHICAL_DISCLOSURE),
+  // not a modal — no local open/close flag needed.
   const [lowBandwidth, setLowBandwidth] = useState<boolean>(() => {
     try { return localStorage.getItem('busulla-low-bandwidth') === 'true'; } catch { return false; }
   });
@@ -294,19 +295,19 @@ const Index: React.FC = () => {
   }, [chatSession]);
 
   const handleStartClick = () => {
-    // Show privacy gate on first run only
-    const hasConsented = localStorage.getItem(PRIVACY_CONSENT_KEY) === 'true';
-    if (hasConsented) {
-      setCurrentStep(AppState.QUIZ);
-    } else {
-      setIsPrivacyGateOpen(true);
-    }
+    // Always route the user through the Responsible AI disclosure step
+    // before the quiz. If they've already consented previously, we still
+    // show it as a fast confirmation screen — it's part of the flow.
+    setCurrentStep(AppState.ETHICAL_DISCLOSURE);
   };
 
   const handlePrivacyAgree = () => {
     localStorage.setItem(PRIVACY_CONSENT_KEY, 'true');
-    setIsPrivacyGateOpen(false);
     setCurrentStep(AppState.QUIZ);
+  };
+
+  const handlePrivacyCancel = () => {
+    setCurrentStep(AppState.LANDING);
   };
 
   const processResults = async (finalAnswers: QuizAnswer[]) => {
@@ -554,6 +555,10 @@ const Index: React.FC = () => {
           )}
 
 
+          {currentStep === AppState.ETHICAL_DISCLOSURE && (
+            <PrivacyGate key="ethical" onAgree={handlePrivacyAgree} onCancel={handlePrivacyCancel} />
+          )}
+
           {currentStep === AppState.QUIZ && (
             <Quiz key="quiz" onComplete={processResults} />
           )}
@@ -598,11 +603,6 @@ const Index: React.FC = () => {
         <CareerAssistant isOpen={isChatOpen} onToggle={() => setIsChatOpen(!isChatOpen)} session={chatSession} onSessionUpdate={setChatSession} careerContext={prediction?.primaryCareer} weakAreas={interviewSession?.weakAreas} />
       )}
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
-      <PrivacyGate
-        isOpen={isPrivacyGateOpen}
-        onAgree={handlePrivacyAgree}
-        onCancel={() => setIsPrivacyGateOpen(false)}
-      />
     </div>
   );
 };
