@@ -459,8 +459,8 @@ const Index: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setLang(lang === 'en' ? 'al' : 'en')}
-            aria-label="Toggle language"
-            title="Toggle language"
+            aria-label={UI_CONTENT[lang].toggleLangAria}
+            title={UI_CONTENT[lang].toggleLangAria}
             className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all font-mono"
           >
             <span className={lang === 'en' ? 'font-bold' : 'opacity-40'}>EN</span>
@@ -469,14 +469,14 @@ const Index: React.FC = () => {
           </button>
           <button
             onClick={() => setLowBandwidth(v => !v)}
-            aria-label="Low-Bandwidth Mode"
-            title="Low-Bandwidth Mode (Intel OpenVINO Optimization)"
+            aria-label={UI_CONTENT[lang].lowBwAria}
+            title={UI_CONTENT[lang].lowBwTitle}
             className={`hidden md:inline-flex items-center gap-1.5 text-[10px] md:text-xs uppercase tracking-widest border px-3 py-2 transition-all font-mono ${
               lowBandwidth ? 'border-accent text-accent bg-accent/10' : 'border-border hover:bg-foreground hover:text-background'
             }`}
           >
             <Zap className="w-3 h-3" />
-            {lang === 'en' ? 'Low-BW' : 'Brez i Ulët'}
+            {UI_CONTENT[lang].lowBwLabel}
           </button>
           <button onClick={() => setIsAboutOpen(true)} className="text-[10px] md:text-xs uppercase tracking-widest border border-border px-3 py-2 hover:bg-foreground hover:text-background transition-all">
             {TRANSLATIONS.nav.about}
