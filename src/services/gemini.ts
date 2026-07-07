@@ -35,6 +35,20 @@ import {
   ChatMessage,
 } from '../types';
 import { classifyToPrediction } from './classifier';
+import { getLanguage } from '../i18n';
+
+/**
+ * Returns the current UI language directive for LLM prompts. The AI must
+ * strictly obey this — every question, feedback string, summary, and
+ * roadmap MUST be written in the exact language the user has selected in
+ * the UI. This eliminates language leakage across the EN/AL toggle.
+ */
+function languageDirective(): string {
+  const lang = getLanguage();
+  return lang === 'en'
+    ? 'OUTPUT LANGUAGE: Respond EXCLUSIVELY in professional, native English. Do NOT emit any Albanian words or phrases under any circumstances.'
+    : 'OUTPUT LANGUAGE: Respond EXCLUSIVELY in fluent, native Albanian (shqip). Do NOT emit any English words or phrases except unavoidable technical proper nouns.';
+}
 
 // Config
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
