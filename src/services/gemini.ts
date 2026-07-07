@@ -352,7 +352,9 @@ export const generateDynamicQuestion = async (
 INCLUSION MODE (Neurodiversity Support) — ACTIVE:
 Strip ambiguous corporate idioms and open-ended buzzwords. Frame every scenario concretely. Split complex prompts into clear numbered sub-parts (a, b, c). Prioritize technical and logical focus. Replace metaphors like "sell yourself" or "biggest weakness" with concrete task-based framings.` : '';
 
-    const prompt = `You are an elite, empathetic Talent Acquisition Director specialized in modern tech, digital, and creative industry roles. You are conducting a live interview for the position: ${career}.
+    const prompt = `${languageDirective()}
+
+You are an elite, empathetic Talent Acquisition Director specialized in modern tech, digital, and creative industry roles. You are conducting a live interview for the position: ${career}.
 
 Interview mode: ${modeDescriptions[mode]}
 Difficulty level: ${difficultyContext[difficulty]}
