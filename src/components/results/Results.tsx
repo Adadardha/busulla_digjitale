@@ -5,7 +5,15 @@ import { BookOpen, GraduationCap, TrendingUp, Banknote, BarChart3, CheckCircle2,
 import { PredictionResult, CareerRoadmap } from '../../types';
 import { TRANSLATIONS, useLanguage } from '../../i18n';
 import { generateCareerRoadmap } from '../../services/gemini';
+import { localizePrediction, localizeRoadmap, localizeCareerName } from '../../services/careerLocale';
 import { LoadingSpinner, ErrorMessage } from '../Decorations';
+
+/** Safe numeric percent — never returns NaN. */
+const pct = (n: unknown): number => {
+  const v = Number(n);
+  if (!isFinite(v) || isNaN(v)) return 0;
+  return Math.round(v * 100);
+};
 
 interface ResultsProps {
   prediction: PredictionResult;
