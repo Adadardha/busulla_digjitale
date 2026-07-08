@@ -29,7 +29,8 @@ type Dict = {
 const EN_DICT: Dict = {
   landing: {
     title: 'DIGITAL COMPASS',
-    subtitle: 'Discover your career path with the help of artificial intelligence.',
+    subtitle:
+      'An AI-driven career mapping and accessibility ecosystem engineered to democratize professional guidance, bridge regional opportunity gaps, and provide inclusive, neurodivergent-friendly evaluation metrics.',
   },
   common: {
     start: 'START',
