@@ -192,7 +192,8 @@ const EN_DICT: Dict = {
 const AL_DICT: Dict = {
   landing: {
     title: 'BUSULLA DIGJITALE',
-    subtitle: 'Zbulo rrugën tënde të karrierës me ndihmën e inteligjencës artificiale.',
+    subtitle:
+      'Një ekosistem i udhëheqjes së karrierës i mundësuar nga IA, i projektuar për të demokratizuar orientimin profesional, për të zvogëluar diferencat rajonale dhe për të ofruar metrika përfshirëse për njerëzit neurodivergjentë.',
   },
   common: {
     start: 'FILLO',
