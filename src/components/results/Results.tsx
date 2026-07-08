@@ -5,7 +5,15 @@ import { BookOpen, GraduationCap, TrendingUp, Banknote, BarChart3, CheckCircle2,
 import { PredictionResult, CareerRoadmap } from '../../types';
 import { TRANSLATIONS, useLanguage } from '../../i18n';
 import { generateCareerRoadmap } from '../../services/gemini';
+import { localizePrediction, localizeRoadmap, localizeCareerName } from '../../services/careerLocale';
 import { LoadingSpinner, ErrorMessage } from '../Decorations';
+
+/** Safe numeric percent — never returns NaN. */
+const pct = (n: unknown): number => {
+  const v = Number(n);
+  if (!isFinite(v) || isNaN(v)) return 0;
+  return Math.round(v * 100);
+};
 
 interface ResultsProps {
   prediction: PredictionResult;
@@ -14,19 +22,29 @@ interface ResultsProps {
   onRetakeQuiz: () => void;
 }
 
-const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartInterview, onRetakeQuiz }) => {
+const Results: React.FC<ResultsProps> = ({ prediction: rawPrediction, mlScores: rawMlScores, onStartInterview, onRetakeQuiz }) => {
   const { lang } = useLanguage();
-  const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
+  const [rawRoadmap, setRawRoadmap] = useState<CareerRoadmap | null>(null);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
   const [roadmapError, setRoadmapError] = useState(false);
   const [missionsDone, setMissionsDone] = useState<boolean[]>([false, false, false]);
+
+  // Localize prediction / ml scores / roadmap at render time so an EN↔AL
+  // toggle re-renders data rows (not only headers) without re-fetching.
+  const prediction = useMemo(() => localizePrediction(rawPrediction, lang), [rawPrediction, lang]);
+  const mlScores = useMemo(
+    () => rawMlScores.map(s => ({ career: localizeCareerName(s.career, lang), confidence: Number(s.confidence) || 0 })),
+    [rawMlScores, lang],
+  );
+  const roadmap = useMemo(() => (rawRoadmap ? localizeRoadmap(rawRoadmap, lang) : null), [rawRoadmap, lang]);
 
   const loadRoadmap = async () => {
     setRoadmapLoading(true);
     setRoadmapError(false);
     try {
-      const r = await generateCareerRoadmap(prediction.primaryCareer);
-      setRoadmap(r);
+      // Fetch using canonical (Albanian) career name so cache/fallbacks match.
+      const r = await generateCareerRoadmap(rawPrediction.primaryCareer);
+      setRawRoadmap(r);
     } catch {
       setRoadmapError(true);
     } finally {
@@ -36,9 +54,12 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
 
   useEffect(() => {
     loadRoadmap();
-  }, [prediction.primaryCareer]);
+    // Roadmap depends on career only. Language localization happens in useMemo
+    // above, so we don't need to re-fetch on language toggle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawPrediction.primaryCareer]);
 
-  const matchPercent = (prediction.confidence * 100).toFixed(0);
+  const matchPercent = pct(prediction.confidence);
 
   const missions = [
     TRANSLATIONS.results.mission1,
@@ -116,7 +137,7 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
                   <div className="flex justify-between items-start mb-2">
                     <h5 className="font-bold text-base md:text-lg">{alt.career}</h5>
                     <span className="text-sm font-mono text-muted-foreground">
-                      {(alt.confidence * 100).toFixed(0)}%
+                      {pct(alt.confidence)}%
                     </span>
                   </div>
                   <p className="text-xs md:text-sm text-muted-foreground">{alt.description}</p>
@@ -147,12 +168,12 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
                     <motion.div
                       className={`h-full ${i === 0 ? 'bg-foreground' : 'bg-foreground/40'}`}
                       initial={{ width: 0 }}
-                      animate={{ width: `${s.confidence * 100}%` }}
+                      animate={{ width: `${pct(s.confidence)}%` }}
                       transition={{ duration: 0.6, delay: i * 0.07, ease: 'easeOut' }}
                     />
                   </div>
                   <span className="w-10 text-right text-xs font-mono text-muted-foreground">
-                    {(s.confidence * 100).toFixed(0)}%
+                    {pct(s.confidence)}%
                   </span>
                 </div>
               ))}
