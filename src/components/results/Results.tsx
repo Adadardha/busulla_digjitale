@@ -22,19 +22,29 @@ interface ResultsProps {
   onRetakeQuiz: () => void;
 }
 
-const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartInterview, onRetakeQuiz }) => {
+const Results: React.FC<ResultsProps> = ({ prediction: rawPrediction, mlScores: rawMlScores, onStartInterview, onRetakeQuiz }) => {
   const { lang } = useLanguage();
-  const [roadmap, setRoadmap] = useState<CareerRoadmap | null>(null);
+  const [rawRoadmap, setRawRoadmap] = useState<CareerRoadmap | null>(null);
   const [roadmapLoading, setRoadmapLoading] = useState(false);
   const [roadmapError, setRoadmapError] = useState(false);
   const [missionsDone, setMissionsDone] = useState<boolean[]>([false, false, false]);
+
+  // Localize prediction / ml scores / roadmap at render time so an EN↔AL
+  // toggle re-renders data rows (not only headers) without re-fetching.
+  const prediction = useMemo(() => localizePrediction(rawPrediction, lang), [rawPrediction, lang]);
+  const mlScores = useMemo(
+    () => rawMlScores.map(s => ({ career: localizeCareerName(s.career, lang), confidence: Number(s.confidence) || 0 })),
+    [rawMlScores, lang],
+  );
+  const roadmap = useMemo(() => (rawRoadmap ? localizeRoadmap(rawRoadmap, lang) : null), [rawRoadmap, lang]);
 
   const loadRoadmap = async () => {
     setRoadmapLoading(true);
     setRoadmapError(false);
     try {
-      const r = await generateCareerRoadmap(prediction.primaryCareer);
-      setRoadmap(r);
+      // Fetch using canonical (Albanian) career name so cache/fallbacks match.
+      const r = await generateCareerRoadmap(rawPrediction.primaryCareer);
+      setRawRoadmap(r);
     } catch {
       setRoadmapError(true);
     } finally {
@@ -44,9 +54,12 @@ const Results: React.FC<ResultsProps> = ({ prediction, mlScores, onStartIntervie
 
   useEffect(() => {
     loadRoadmap();
-  }, [prediction.primaryCareer]);
+    // Roadmap depends on career only. Language localization happens in useMemo
+    // above, so we don't need to re-fetch on language toggle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawPrediction.primaryCareer]);
 
-  const matchPercent = (prediction.confidence * 100).toFixed(0);
+  const matchPercent = pct(prediction.confidence);
 
   const missions = [
     TRANSLATIONS.results.mission1,
