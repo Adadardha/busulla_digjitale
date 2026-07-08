@@ -137,7 +137,7 @@ const Results: React.FC<ResultsProps> = ({ prediction: rawPrediction, mlScores: 
                   <div className="flex justify-between items-start mb-2">
                     <h5 className="font-bold text-base md:text-lg">{alt.career}</h5>
                     <span className="text-sm font-mono text-muted-foreground">
-                      {(alt.confidence * 100).toFixed(0)}%
+                      {pct(alt.confidence)}%
                     </span>
                   </div>
                   <p className="text-xs md:text-sm text-muted-foreground">{alt.description}</p>
