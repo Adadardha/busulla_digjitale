@@ -522,13 +522,13 @@ const Index: React.FC = () => {
 
               <ASCIIHeader />
 
-              <div className="space-y-4 md:space-y-6 relative z-10">
+              <div className="space-y-4 md:space-y-6 relative z-10 w-full">
                 <h1 className="text-4xl md:text-7xl lg:text-9xl font-heading font-black uppercase leading-[0.85] tracking-tighter headline-gradient">
                   {TRANSLATIONS.landing.title.split(' ').map((word, j) => (
                     <span key={j} className="block hover:italic transition-all">{word}</span>
                   ))}
                 </h1>
-                <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-xl mx-auto italic border-l-2 border-border pl-4 md:pl-6">
+                <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl lg:max-w-4xl mx-auto leading-relaxed border-l-2 border-border pl-4 md:pl-6 text-left md:text-center md:border-l-0 md:pl-0">
                   {TRANSLATIONS.landing.subtitle}
                 </p>
               </div>
