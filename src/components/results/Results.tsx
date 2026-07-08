@@ -168,12 +168,12 @@ const Results: React.FC<ResultsProps> = ({ prediction: rawPrediction, mlScores: 
                     <motion.div
                       className={`h-full ${i === 0 ? 'bg-foreground' : 'bg-foreground/40'}`}
                       initial={{ width: 0 }}
-                      animate={{ width: `${s.confidence * 100}%` }}
+                      animate={{ width: `${pct(s.confidence)}%` }}
                       transition={{ duration: 0.6, delay: i * 0.07, ease: 'easeOut' }}
                     />
                   </div>
                   <span className="w-10 text-right text-xs font-mono text-muted-foreground">
-                    {(s.confidence * 100).toFixed(0)}%
+                    {pct(s.confidence)}%
                   </span>
                 </div>
               ))}
